@@ -53,7 +53,9 @@ class Object:public arInteractableThing {
 			_width = width;
 			// Read OBJ file if provided.
 			if(filename != "") {
-				if(!loadedOBJ.readOBJ(filename)) { 
+				cout << "loading " << filename << '\n';
+				cout.flush();
+				if(!loadedOBJ.readOBJ(filename,"data")) { 
 					cout << "Cound not load OBJ file: " << filename << '\n';
 					_type = -1;
 				}
@@ -456,7 +458,7 @@ Object theBox(0, 5, 2, 3);
 Object theSphere(1);
 Object theEllipsoid(1, 3, 1, 2);
 Object theTeapot(2, 2.0, 2.0, 2.0, "teapot.obj");
-Object theSunflower(2, 2.0, 2.0, 2.0, "paperlantern.obj");
+Object theSunflower(2, 4.0, 4.0, 4.0, "cello.obj");
 
 
 
