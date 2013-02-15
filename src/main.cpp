@@ -458,7 +458,7 @@ Object theBox(0, 5, 2, 3);
 Object theSphere(1);
 Object theEllipsoid(1, 3, 1, 2);
 Object theTeapot(2, 2.0, 2.0, 2.0, "teapot.obj");
-Object theSunflower(2, 4.0, 4.0, 4.0, "cello.obj");
+Object theSunflower(2, 4.0, 4.0, 4.0, "mus001.obj");
 
 
 
