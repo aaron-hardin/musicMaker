@@ -51,6 +51,7 @@ class Object:public arInteractableThing {
 			_length = length;
 			_height = height;
 			_width = width;
+			_selected = true;
 			// Read OBJ file if provided.
 			if(filename != "") {
 				cout << "loading " << filename << '\n';
@@ -59,13 +60,13 @@ class Object:public arInteractableThing {
 					cout << "Cound not load OBJ file: " << filename << '\n';
 					_type = -1;
 				}
-				else {
+				else if(_type == 0) {
 					// Set type to loaded file
 					_type = 2;
 				}
 			}
 			// invalid type and file combination
-			else if(_type == 2) { _type = -1; }
+			else if(_type >= 2) { _type = -1; }
 		}
 		
 		// Draw the object's representation.
@@ -89,6 +90,8 @@ class Object:public arInteractableThing {
 		float _width;
 		// Object's loaded OBJ file
 		arOBJRenderer loadedOBJ;
+		
+		bool _selected;
 };
 
 
@@ -121,6 +124,22 @@ void Object::draw() {
 		else if(_type == 2) { 
 			// Draw loaded OBJ file.
 			loadedOBJ.draw();
+			
+			glTranslatef(1.0f,1.0f,1.0f);
+			loadedOBJ.draw();
+			glTranslatef(-1.0f,-1.0f,-1.0f);
+			
+		}
+		else if(_type > 2) { 
+			// Draw loaded OBJ file.
+			loadedOBJ.draw();
+			if (_selected)
+			{
+				//draw little music notes
+				arOBJRenderer musicNote;
+				musicNote.readOBJ("MusicNote.obj","data");
+				musicNote.draw();
+			}
 		}
 			
 	// Always finish with glPopMatrix to match glPushMatrix above.
@@ -458,7 +477,7 @@ Object theBox(0, 5, 2, 3);
 Object theSphere(1);
 Object theEllipsoid(1, 3, 1, 2);
 Object theTeapot(2, 2.0, 2.0, 2.0, "teapot.obj");
-Object theSunflower(2, 4.0, 4.0, 4.0, "mus001.obj");
+Object theSunflower(3, 0.5, 0.5, 0.5, "MusicNote.obj");
 
 
 
