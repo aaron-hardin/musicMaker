@@ -32,12 +32,17 @@ const float farClipDistance = 100.0 * FEET_TO_LOCAL_UNITS;
 
 bool coneselection = false;
 
+arOBJRenderer musicNotey;
+double currentTime; //in millis
+
 // Object class
 // Purpose:
 //		- Creates an interactable cube or ellipsoid based on provided dimensions.
 class Object:public arInteractableThing {
 
 	public:
+	
+		bool _selected;
 	
 		// Default constructor. 
 		// Parameters are:
@@ -51,7 +56,7 @@ class Object:public arInteractableThing {
 			_length = length;
 			_height = height;
 			_width = width;
-			_selected = true;
+			_selected = false;
 			// Read OBJ file if provided.
 			if(filename != "") {
 				cout << "loading " << filename << '\n';
@@ -91,7 +96,7 @@ class Object:public arInteractableThing {
 		// Object's loaded OBJ file
 		arOBJRenderer loadedOBJ;
 		
-		bool _selected;
+		//bool _selected;
 };
 
 
@@ -123,12 +128,7 @@ void Object::draw() {
 		}
 		else if(_type == 2) { 
 			// Draw loaded OBJ file.
-			loadedOBJ.draw();
-			
-			glTranslatef(1.0f,1.0f,1.0f);
-			loadedOBJ.draw();
-			glTranslatef(-1.0f,-1.0f,-1.0f);
-			
+			loadedOBJ.draw();			
 		}
 		else if(_type > 2) { 
 			// Draw loaded OBJ file.
@@ -136,9 +136,27 @@ void Object::draw() {
 			if (_selected)
 			{
 				//draw little music notes
-				arOBJRenderer musicNote;
+			/*	arOBJRenderer musicNote;
 				musicNote.readOBJ("MusicNote.obj","data");
 				musicNote.draw();
+			*/
+				
+				//cout << "drawing note" << '\n';
+			
+				glScalef(1/_length, 1/_height, 1/_width);
+			
+				int timetrans = (int)(currentTime/100);
+				int modded = timetrans % 100;
+				float ytranslat = (float)((float)modded / 100.0f);
+				
+				float xtranslat = (float)((float)(2-((int(currentTime/1000)) % 5))/4.0f);
+				
+				glTranslatef(xtranslat,ytranslat,1.0f);
+				//loadedOBJ.draw();
+				musicNotey.draw();
+				glTranslatef(-xtranslat,-ytranslat,-1.0f);
+				
+				glScalef(_length, _height, _width);
 			}
 		}
 			
@@ -287,6 +305,15 @@ void RightVirtualHand::detectCollisions(arEffector& self, list<arInteractable*>&
 		// If so, set selector's distance to match object's distance.
 		_selector.setMaxDistance(closestDistance);
 		setInteractionSelector(_selector);
+		
+		//cout << "object was selected?" << '\n';
+		
+		if(getOnButton(1) == 1)
+		{
+			//cout << "object was selected" << '\n';
+			Object* oby = (Object*)closestObject;
+			oby->_selected = !oby->_selected;
+		}
 	}
 	else {
 		// If not, set selector's distance to size of effector.
@@ -476,8 +503,7 @@ Object theCube;
 Object theBox(0, 5, 2, 3);
 Object theSphere(1);
 Object theEllipsoid(1, 3, 1, 2);
-Object theTeapot(2, 2.0, 2.0, 2.0, "teapot.obj");
-Object theSunflower(3, 0.5, 0.5, 0.5, "MusicNote.obj");
+Object theCello(3, 0.5, 0.5, 0.5, "cello.obj");
 
 
 
@@ -490,8 +516,8 @@ LeftVirtualHand leftHand;
 
 // Global sound variables.
 int soundTransformID;
-int teapotSound;
 int clickSound;
+int celloSound;
 
 // MasterSlave transfer variables for shared memory. Only used in cluster-based systems. Hence,
 // not needed in our system, but here's some examples.
@@ -505,8 +531,7 @@ int sphereHighlighted = 0;
 arMatrix4 sphereMatrix;
 int ellipseHighlighted = 0;
 arMatrix4 ellipseMatrix;
-arMatrix4 teapotMatrix;
-arMatrix4 sunflowerMatrix;
+arMatrix4 celloMatrix;
 
 
 // start callback
@@ -531,8 +556,7 @@ bool start(arMasterSlaveFramework& framework, arSZGClient& client ) {
 	framework.addTransferField("sphereMatrix", &sphereMatrix, AR_FLOAT, 16);
 	framework.addTransferField("ellipseHighlighted", &ellipseHighlighted, AR_INT, 1);
 	framework.addTransferField("ellipseMatrix", &ellipseMatrix, AR_FLOAT, 16);
-	framework.addTransferField("teapotMatrix", &teapotMatrix, AR_FLOAT, 16);
-	framework.addTransferField("sunflowerMatrix", &sunflowerMatrix, AR_FLOAT, 16);
+	framework.addTransferField("celloMatrix", &celloMatrix, AR_FLOAT, 16);
 	
 	
 	// Set up navigation. 
@@ -556,30 +580,29 @@ bool start(arMasterSlaveFramework& framework, arSZGClient& client ) {
 	theBox.setMatrix(ar_translationMatrix(0,5,-10));
 	theSphere.setMatrix(ar_translationMatrix(3,5,-2));
 	theEllipsoid.setMatrix(ar_translationMatrix(-3,5,-0));
-	theTeapot.setMatrix(ar_translationMatrix(0, 5, -6));
-	theSunflower.setMatrix(ar_translationMatrix(0, 5, -10));
+	theCello.setMatrix(ar_translationMatrix(0, 5, -10));
 	// Keep list of objects to interact with.
 	objects.push_back(&theCube);
 	objects.push_back(&theBox);
 	objects.push_back(&theSphere);
 	objects.push_back(&theEllipsoid);
-	objects.push_back(&theTeapot);
-	objects.push_back(&theSunflower);
+	objects.push_back(&theCello);
 	
 	
 	// Create sound transform.
 	soundTransformID = dsTransform("world", framework.getNavNodeName(), ar_scaleMatrix(1.0));
-	// Create loop for teapot sound. 
 	// Parameters are:
 	//		name - string name for sound
 	//		transformName - string name for dsTransform
 	//		loopType - 1 for continuous, -1 for one-time, 0 to stop
 	//		loudness - float from 0.0 (quiet) to 1.0 (max)
 	//		positionVector - vector position of sound origin
-	teapotSound = dsLoop("teapot", "world", "teapot.mp3", 1, 1.0, arVector3(0, 5, -6)); 
 	// Create loop for click sound.
 	clickSound = dsLoop("click", "world", "click.mp3", 0, 1.0, arVector3(0, 0, 0));
 	
+	celloSound = dsLoop("cello", "world", "celloma.mp3", 1, 1.0, arVector3(0, 5, -6)); 
+	
+	musicNotey.readOBJ("MusicNote.obj","data");
 	
 	// Return true if everything is initialized correctly.
 	return true;
@@ -635,6 +658,8 @@ void preExchange(arMasterSlaveFramework& framework) {
 	// to the slave nodes.
 	framework.navUpdate();
 	
+	currentTime = framework.getTime();
+	
 	// Process user input.
 	
 	// Detect right hand collisions.
@@ -674,19 +699,24 @@ void preExchange(arMasterSlaveFramework& framework) {
 	sphereMatrix = theSphere.getMatrix();
 	ellipseHighlighted = (int)theEllipsoid.getHighlight();
 	ellipseMatrix = theEllipsoid.getMatrix();
-	teapotMatrix = theTeapot.getMatrix();
-	sunflowerMatrix = theSunflower.getMatrix();
+	celloMatrix = theCello.getMatrix();
 	
 	
-	// Determine loudness of teapot sound based on distance between user and teapot.
 	arMatrix4 navMatrix = ar_getNavMatrix();
-	float soundDistance = sqrt((navMatrix[12] - teapotMatrix[12])*(navMatrix[12] - teapotMatrix[12]) +
-							   (navMatrix[13] - teapotMatrix[13])*(navMatrix[13] - teapotMatrix[13]) +
-							   (navMatrix[14] - teapotMatrix[14])*(navMatrix[14] - teapotMatrix[14]));
-	float loudness = 1.0 - (soundDistance / 100.0);
-	// Continue sound with new loudness
-	dsLoop(teapotSound, "teapot.mp3", 1, loudness, arVector3(teapotMatrix[12], teapotMatrix[13], teapotMatrix[14]));
 	
+	if(theCello._selected == true)
+	{
+		float celloSoundDistance = sqrt((navMatrix[12] - celloMatrix[12])*(navMatrix[12] - celloMatrix[12]) +
+								   (navMatrix[13] - celloMatrix[13])*(navMatrix[13] - celloMatrix[13]) +
+								   (navMatrix[14] - celloMatrix[14])*(navMatrix[14] - celloMatrix[14]));
+		float celloLoudness = 1.0 - (celloSoundDistance / 100.0);
+		
+		dsLoop(celloSound, "celloma.mp3", 1, celloLoudness, arVector3(celloMatrix[12], celloMatrix[13], celloMatrix[14]));
+	}
+	else
+	{
+		dsLoop(celloSound, "celloma.mp3", 0, 0, arVector3(celloMatrix[12], celloMatrix[13], celloMatrix[14]));
+	}
 }
 
 
@@ -713,8 +743,7 @@ void postExchange(arMasterSlaveFramework& framework) {
 		theSphere.setMatrix(sphereMatrix.v);
 		theEllipsoid.setHighlight((bool)ellipseHighlighted);
 		theEllipsoid.setMatrix(ellipseMatrix.v);
-		theTeapot.setMatrix(teapotMatrix.v);
-		theSunflower.setMatrix(sunflowerMatrix.v);
+		theCello.setMatrix(celloMatrix.v);
 	}
 }
 
@@ -735,8 +764,7 @@ void draw(arMasterSlaveFramework& framework) {
 	theBox.draw();
 	theSphere.draw();
 	theEllipsoid.draw();
-	theTeapot.draw();
-	theSunflower.draw();
+	theCello.draw();
 	
 	
 	// Draw the effectors.
