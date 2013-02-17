@@ -1,32 +1,33 @@
-# Blender3D MTL File: cello.blend
-# Material Count: 3
-newmtl cello_metal
-Ns 98.039216
-Ka 0.000000 0.000000 0.000000
-Kd 0.800000 0.800000 0.800000
-Ks 0.500000 0.500000 0.500000
-Ni 1.000000
-d 1.000000
-illum 2
-
-
-newmtl cello_string
-Ns 98.039216
-Ka 0.000000 0.000000 0.000000
-Kd 0.680000 0.680000 0.680000
-Ks 0.211226 0.211226 0.211226
-Ni 1.000000
-d 1.000000
-illum 2
-
-
 newmtl cello_black
-Ns 98.039216
-Ka 0.000000 0.000000 0.000000
-Kd 0.112000 0.112000 0.112000
-Ks 0.500000 0.500000 0.500000
-Ni 1.000000
-d 1.000000
-illum 2
-
-
+illum 4
+Kd 0.11 0.11 0.11
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+Ns 98.04
+newmtl cello_body_cellowood_tga
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd cellotexture1.jpg
+Ni 1.00
+Ks 0.50 0.50 0.50
+Ns 18.00
+newmtl cello_metal
+illum 4
+Kd 0.80 0.80 0.80
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+Ns 98.04
+newmtl cello_string
+illum 4
+Kd 0.68 0.68 0.68
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.21 0.21 0.21
+Ns 98.04

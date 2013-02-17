@@ -504,6 +504,7 @@ Object theBox(0, 5, 2, 3);
 Object theSphere(1);
 Object theEllipsoid(1, 3, 1, 2);
 Object theCello(3, 0.5, 0.5, 0.5, "cello.obj");
+Object theViolin(3, 0.5, 0.5, 0.5, "violin.obj");
 
 
 
@@ -518,6 +519,8 @@ LeftVirtualHand leftHand;
 int soundTransformID;
 int clickSound;
 int celloSound;
+int violinSound;
+int cvSound;
 
 // MasterSlave transfer variables for shared memory. Only used in cluster-based systems. Hence,
 // not needed in our system, but here's some examples.
@@ -532,6 +535,7 @@ arMatrix4 sphereMatrix;
 int ellipseHighlighted = 0;
 arMatrix4 ellipseMatrix;
 arMatrix4 celloMatrix;
+arMatrix4 violinMatrix;
 
 
 // start callback
@@ -557,6 +561,7 @@ bool start(arMasterSlaveFramework& framework, arSZGClient& client ) {
 	framework.addTransferField("ellipseHighlighted", &ellipseHighlighted, AR_INT, 1);
 	framework.addTransferField("ellipseMatrix", &ellipseMatrix, AR_FLOAT, 16);
 	framework.addTransferField("celloMatrix", &celloMatrix, AR_FLOAT, 16);
+	framework.addTransferField("violinMatrix", &violinMatrix, AR_FLOAT, 16);
 	
 	
 	// Set up navigation. 
@@ -581,12 +586,14 @@ bool start(arMasterSlaveFramework& framework, arSZGClient& client ) {
 	theSphere.setMatrix(ar_translationMatrix(3,5,-2));
 	theEllipsoid.setMatrix(ar_translationMatrix(-3,5,-0));
 	theCello.setMatrix(ar_translationMatrix(0, 5, -10));
+	theViolin.setMatrix(ar_translationMatrix(0, 6, -5));
 	// Keep list of objects to interact with.
 	objects.push_back(&theCube);
 	objects.push_back(&theBox);
 	objects.push_back(&theSphere);
 	objects.push_back(&theEllipsoid);
 	objects.push_back(&theCello);
+	objects.push_back(&theViolin);
 	
 	
 	// Create sound transform.
@@ -601,6 +608,10 @@ bool start(arMasterSlaveFramework& framework, arSZGClient& client ) {
 	clickSound = dsLoop("click", "world", "click.mp3", 0, 1.0, arVector3(0, 0, 0));
 	
 	celloSound = dsLoop("cello", "world", "celloma.mp3", 1, 1.0, arVector3(0, 5, -6)); 
+	
+	violinSound = dsLoop("violin", "world", "violin.mp3", 1, 1.0, arVector3(0, 5, -6)); 
+	
+	cvSound = dsLoop("cv", "world", "cv.mp3", 1, 1.0, arVector3(0, 5, -6)); 
 	
 	musicNotey.readOBJ("MusicNote.obj","data");
 	
@@ -700,11 +711,16 @@ void preExchange(arMasterSlaveFramework& framework) {
 	ellipseHighlighted = (int)theEllipsoid.getHighlight();
 	ellipseMatrix = theEllipsoid.getMatrix();
 	celloMatrix = theCello.getMatrix();
+	violinMatrix = theViolin.getMatrix();
 	
 	
 	arMatrix4 navMatrix = ar_getNavMatrix();
 	
-	if(theCello._selected == true)
+	dsLoop(celloSound, "celloma.mp3", 0, 0, arVector3(celloMatrix[12], celloMatrix[13], celloMatrix[14]));
+	dsLoop(violinSound, "violin.mp3", 0, 0, arVector3(violinMatrix[12], violinMatrix[13], violinMatrix[14]));
+	dsLoop(cvSound, "cv.mp3", 0, 0, arVector3((violinMatrix[12]+celloMatrix[12])/2, (violinMatrix[13]+celloMatrix[13])/2, (violinMatrix[14]+celloMatrix[14])/2));
+	
+	if(theCello._selected == true && theViolin._selected == false)
 	{
 		float celloSoundDistance = sqrt((navMatrix[12] - celloMatrix[12])*(navMatrix[12] - celloMatrix[12]) +
 								   (navMatrix[13] - celloMatrix[13])*(navMatrix[13] - celloMatrix[13]) +
@@ -713,9 +729,29 @@ void preExchange(arMasterSlaveFramework& framework) {
 		
 		dsLoop(celloSound, "celloma.mp3", 1, celloLoudness, arVector3(celloMatrix[12], celloMatrix[13], celloMatrix[14]));
 	}
+	else if(theCello._selected == false && theViolin._selected == true)
+	{
+		float violinSoundDistance = sqrt((navMatrix[12] - violinMatrix[12])*(navMatrix[12] - violinMatrix[12]) +
+								   (navMatrix[13] - violinMatrix[13])*(navMatrix[13] - violinMatrix[13]) +
+								   (navMatrix[14] - violinMatrix[14])*(navMatrix[14] - violinMatrix[14]));
+		float violinLoudness = 1.0 - (violinSoundDistance / 100.0);
+		
+		dsLoop(violinSound, "violin.mp3", 1, violinLoudness, arVector3(violinMatrix[12], violinMatrix[13], violinMatrix[14]));
+	}
+	else if(theCello._selected == true && theViolin._selected == true)
+	{
+	
+		//TODO, fix distance
+		float cvSoundDistance = sqrt((navMatrix[12] - violinMatrix[12])*(navMatrix[12] - violinMatrix[12]) +
+								   (navMatrix[13] - violinMatrix[13])*(navMatrix[13] - violinMatrix[13]) +
+								   (navMatrix[14] - violinMatrix[14])*(navMatrix[14] - violinMatrix[14]));
+		float cvLoudness = 1.0 - (cvSoundDistance / 100.0);
+		
+		dsLoop(cvSound, "violin.mp3", 1, cvLoudness, arVector3((violinMatrix[12]+celloMatrix[12])/2, (violinMatrix[13]+celloMatrix[13])/2, (violinMatrix[14]+celloMatrix[14])/2));
+	}
 	else
 	{
-		dsLoop(celloSound, "celloma.mp3", 0, 0, arVector3(celloMatrix[12], celloMatrix[13], celloMatrix[14]));
+		//also TODO
 	}
 }
 
@@ -744,6 +780,7 @@ void postExchange(arMasterSlaveFramework& framework) {
 		theEllipsoid.setHighlight((bool)ellipseHighlighted);
 		theEllipsoid.setMatrix(ellipseMatrix.v);
 		theCello.setMatrix(celloMatrix.v);
+		theViolin.setMatrix(violinMatrix.v);
 	}
 }
 
@@ -765,7 +802,7 @@ void draw(arMasterSlaveFramework& framework) {
 	theSphere.draw();
 	theEllipsoid.draw();
 	theCello.draw();
-	
+	theViolin.draw();
 	
 	// Draw the effectors.
 	rightHand.draw();
