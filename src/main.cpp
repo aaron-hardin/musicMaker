@@ -33,7 +33,15 @@ const float farClipDistance = 100.0 * FEET_TO_LOCAL_UNITS;
 bool coneselection = false;
 
 arOBJRenderer musicNotey;
-double currentTime; //in millis
+double currentTimeGlobal; //in millis
+
+int selectionMode = 0; //0 means null, 1 means just entered, 2 means in selection
+
+static int button1 = 0;
+static double pressed1 = 0.0;
+const double threshold = 2000.0;    // 2 seconds
+
+float b[3];
 
 // Object class
 // Purpose:
@@ -145,11 +153,11 @@ void Object::draw() {
 			
 				glScalef(1/_length, 1/_height, 1/_width);
 			
-				int timetrans = (int)(currentTime/100);
+				int timetrans = (int)(currentTimeGlobal/100);
 				int modded = timetrans % 100;
 				float ytranslat = (float)((float)modded / 100.0f);
 				
-				float xtranslat = (float)((float)(2-((int(currentTime/1000)) % 5))/4.0f);
+				float xtranslat = (float)((float)(2-((int(currentTimeGlobal/1000)) % 5))/4.0f);
 				
 				glTranslatef(xtranslat,ytranslat,1.0f);
 				//loadedOBJ.draw();
@@ -409,6 +417,8 @@ class LeftVirtualHand:public arEffector {
 		
 		// Draw a representation for the right hand.
 		void draw() const;
+		
+		float getLength();
 	
 	private:
 		float _currentLength;
@@ -456,6 +466,22 @@ void LeftVirtualHand::extend(arEffector& self, list<arInteractable*>& objects, f
 		_currentLength += _interactionDistance;
 		setTipOffset(arVector3(0, 0, -_currentLength));
 	}
+	if(selectionMode == 3 && ar_pollingInteraction(self, objects)) //if it interacted
+	{
+		//cout << "hit an object" << '\n';
+		//find out which object it interacted with
+		list<arInteractable*>::iterator i;
+		for(i=objects.begin(); i != objects.end(); ++i) 
+		{
+			if(ar_pollingInteraction(self, *i))
+			{
+				Object *oby = ((Object*)(*i));
+				oby->_selected = !oby->_selected;
+				selectionMode = 0;
+			}
+		}
+
+	}
 }
 
 
@@ -486,6 +512,11 @@ void LeftVirtualHand::draw() const {
 			GLint stacks =50;
 			glTranslatef(0.0,0.0,-height/2.0f);
 			glutSolidCone(base,height,slices,stacks);
+			GLfloat projMatrix[16];
+			glGetFloatv(GL_MODELVIEW_MATRIX , projMatrix);
+			b[0] = projMatrix[12];
+			b[1] = projMatrix[13];
+			b[2] = projMatrix[14]-_currentLength;
 			glTranslatef(0.0,0.0,height/2.0f);
 			glScalef(2.0/12.0, 2.0/12.0, _currentLength);
 		}
@@ -496,6 +527,69 @@ void LeftVirtualHand::draw() const {
 	glPopMatrix();
 }
 
+float LeftVirtualHand::getLength()
+{
+	return _currentLength;
+}
+
+/* dotProd, dif and magn copied from http://stackoverflow.com/questions/10768142/verify-if-point-is-inside-a-cone-in-3d-space
+ credit to: furikuretsu
+*/
+static float dotProd(float a[], float b[])
+{
+    return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+}
+/*
+static float* dif(float a[], float b[])
+{
+	float retval [] = {a[0]-b[0],a[1]-b[1],a[2]-b[2]};
+    return retval;
+}
+*/
+static float magn(float a[])
+{
+    return (float) (sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]));
+}
+
+/**
+ * @param x coordinates of point to be tested 
+ * @param t coordinates of apex point of cone
+ * @param b coordinates of center of basement circle
+ * @param aperture in radians
+ 
+ Code copied from http://stackoverflow.com/questions/10768142/verify-if-point-is-inside-a-cone-in-3d-space
+ credit to: furikuretsu
+ 
+ altered to suit this purpose
+ 
+ */
+static bool isLyingInCone(float x[], float t[], float b[], float radius, float height)
+{
+	float aperture = 2.f * atan(radius/height);
+
+    // This is for our convenience
+    float halfAperture = aperture/2.f;
+
+    // Vector pointing to X point from apex
+    float apexToXVect[] = {t[0]-x[0],t[1]-x[1],t[2]-x[2]};
+
+    // Vector pointing from apex to circle-center point.
+    float axisVect[] = {t[0]-b[0],t[1]-b[1],t[2]-b[2]};
+
+    // X is lying in cone only if it's lying in 
+    // infinite version of its cone -- that is, 
+    // not limited by "round basement".
+    // We'll use dotProd() to 
+    // determine angle between apexToXVect and axis.
+    
+	bool isInInfiniteCone = dotProd(apexToXVect,axisVect)/magn(apexToXVect)/magn(axisVect) > cos(halfAperture);
+	
+	// We can safely compare cos() of angles 
+    // between vectors instead of bare angles.
+
+
+    return isInInfiniteCone;
+}
 
 
 // Global objects.
@@ -538,6 +632,9 @@ arMatrix4 ellipseMatrix;
 arMatrix4 celloMatrix;
 arMatrix4 violinMatrix;
 arMatrix4 pianoMatrix;
+
+
+
 
 
 // start callback
@@ -672,9 +769,78 @@ void preExchange(arMasterSlaveFramework& framework) {
 	// to the slave nodes.
 	framework.navUpdate();
 	
-	currentTime = framework.getTime();
+	currentTimeGlobal = framework.getTime();
 	
 	// Process user input.
+	
+	
+	
+	/*if(leftHand.getOnButton(1) == 1)
+	{
+		coneselection = !coneselection;
+	}*/
+	
+	
+
+	//const unsigned int numButtons = framework.getNumberButtons();
+
+	// in milliseconds
+	double currentTime = framework.getTime();
+
+	if(leftHand.getButton(0) || leftHand.getButton(2) || leftHand.getButton(3) || leftHand.getButton(4) || leftHand.getButton(5) || leftHand.getButton(10))
+	{
+		selectionMode = 0;
+		coneselection = false;
+	}
+	
+	button1 = leftHand.getButton(1);
+
+	if(button1) {
+		if(pressed1 == 0.0) {
+			// get time since first I/O in milliseconds
+			pressed1 = currentTime;
+			//cout << "1 down\n";
+		}
+	}
+	else {
+		if(pressed1 > 0.0) 
+		{
+			//cout << "1 up\n";
+			if(coneselection)
+			{
+				selectionMode = 1; // just entered selection mode
+				coneselection = false;
+				
+				
+				// for now lets just find out if our piano is in the cone
+				float x[] = {pianoMatrix[12], pianoMatrix[13], pianoMatrix[14]};
+				float height = leftHand.getLength();
+				float radius = height/2.f;
+				arMatrix4 tp = leftHand.getCenterMatrix().v;
+				float t[] = {tp[12],tp[13],tp[14]};
+				cout << "is piano in cone?: " << isLyingInCone(x, t, b, radius, height) << '\n';
+				cout << "x " << x[0] << " " << x[1] << " " << x[2] << '\n';
+				cout << "t " << t[0] << " " << t[1] << " " << t[2] << '\n';
+				cout << "b " << b[0] << " " << b[1] << " " << b[2] << '\n';
+				cout << "radius " << radius << '\n';
+			}
+			else
+			{
+				//i just pointed and clicked but didn't hold down
+				//TODO select what I pointed at
+				selectionMode = 3;
+			}
+		}
+		pressed1 = 0.0;
+	}
+
+	if(pressed1 > 0.0) {
+		if((currentTime - pressed1) > threshold) {
+			coneselection = true;
+		}
+	}
+	
+	
 	
 	// Detect right hand collisions.
 	rightHand.detectCollisions(rightHand, objects);
@@ -697,10 +863,7 @@ void preExchange(arMasterSlaveFramework& framework) {
 		dsLoop(clickSound, "click.mp3", 0, 1.0, arVector3(0, 0, 0));
 	}
 	
-	if(leftHand.getOnButton(1) == 1)
-	{
-		coneselection = !coneselection;
-	}
+	
 	
 	// Update shared memory.
 	
