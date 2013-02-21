@@ -41,7 +41,6 @@ static int button1 = 0;
 static double pressed1 = 0.0;
 const double threshold = 2000.0;    // 2 seconds
 
-float b[3];
 
 // Object class
 // Purpose:
@@ -512,11 +511,6 @@ void LeftVirtualHand::draw() const {
 			GLint stacks =50;
 			glTranslatef(0.0,0.0,-height/2.0f);
 			glutSolidCone(base,height,slices,stacks);
-			GLfloat projMatrix[16];
-			glGetFloatv(GL_MODELVIEW_MATRIX , projMatrix);
-			b[0] = projMatrix[12];
-			b[1] = projMatrix[13];
-			b[2] = projMatrix[14]-_currentLength;
 			glTranslatef(0.0,0.0,height/2.0f);
 			glScalef(2.0/12.0, 2.0/12.0, _currentLength);
 		}
@@ -702,15 +696,13 @@ bool start(arMasterSlaveFramework& framework, arSZGClient& client ) {
 	clickSound = dsLoop("click", "world", "click.mp3", 0, 1.0, arVector3(0, 0, 0));
 	
 	celloSound = dsLoop("cello", "world", "cello.mp3", 1, 1.0, arVector3(0, 5, -6)); 
-	
 	violinSound = dsLoop("violin", "world", "violin.mp3", 1, 1.0, arVector3(0, 5, -6)); 
-	
 	pianoSound = dsLoop("piano", "world", "piano.mp3", 1, 1.0, arVector3(0, 5, -6)); 
-	
 	
 	cpSound = dsLoop("cp", "world", "cp.mp3", 1, 1.0, arVector3(0, 5, -6)); 
 	cvSound = dsLoop("cv", "world", "cv.mp3", 1, 1.0, arVector3(0, 5, -6)); 
 	pvSound = dsLoop("pv", "world", "pv.mp3", 1, 1.0, arVector3(0, 5, -6)); 
+	
 	cpvSound = dsLoop("cpv", "world", "cpv.mp3", 1, 1.0, arVector3(0, 5, -6)); 
 	
 	musicNotey.readOBJ("MusicNote.obj","data");
@@ -727,7 +719,7 @@ bool start(arMasterSlaveFramework& framework, arSZGClient& client ) {
 void windowStartGL(arMasterSlaveFramework& framework, arGUIWindowInfo* windowInfo) {
 	
 	// Initialize OpenGL. Set clear color to black.
-	glClearColor(0, 0, 0, 0);
+	glClearColor(1, 1, 1, 0);
 }
 
 
@@ -816,8 +808,10 @@ void preExchange(arMasterSlaveFramework& framework) {
 				float x[] = {pianoMatrix[12], pianoMatrix[13], pianoMatrix[14]};
 				float height = leftHand.getLength();
 				float radius = height/2.f;
-				arMatrix4 tp = leftHand.getCenterMatrix().v;
+				arMatrix4 tp = leftHand.getBaseMatrix();
+				arMatrix4 bm = leftHand.getMatrix();
 				float t[] = {tp[12],tp[13],tp[14]};
+				float b[] = {bm[12],bm[13],bm[14]};
 				cout << "is piano in cone?: " << isLyingInCone(x, t, b, radius, height) << '\n';
 				cout << "x " << x[0] << " " << x[1] << " " << x[2] << '\n';
 				cout << "t " << t[0] << " " << t[1] << " " << t[2] << '\n';
