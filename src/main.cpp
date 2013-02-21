@@ -1,8 +1,10 @@
 //************************************************************************************************
-// Name:		basicMasterSlave
+// Name:		musicMaker
 // Version:		1.0
-// Description:	This arMasterSlaveFramework application demonstrates interactable objects,
-//				effectors, openGL graphics, loading OBJ files, and incorporating sounds.
+// Description:	This arMasterSlaveFramework application creates instrument objects which can be
+//				turned on and off to make music. An augmentation of the SQUAD selection technique
+//				is implemented in which the user can hold down a button to bring up a non-invasive
+//				SQUAD menu to select an instrument.
 //************************************************************************************************
 
 // The precompiled header include MUST appear as the first non-commented line. See 
@@ -30,21 +32,27 @@ const float FEET_TO_LOCAL_UNITS = 1.0;
 const float nearClipDistance = 0.1 * FEET_TO_LOCAL_UNITS;
 const float farClipDistance = 100.0 * FEET_TO_LOCAL_UNITS;
 
+// decides whether the 'flashlight' is currently on
 bool coneselection = false;
 
+// music note to be used for animation
 arOBJRenderer musicNotey;
+//used to animate music note
 double currentTimeGlobal; //in millis
 
-int selectionMode = 0; //0 means null, 1 means just entered, 2 means in selection
+int selectionMode = 0; //0 means null, 1 means just entered, 2 means in selection, 3 means just point and click
 
+// has it been pressed
 static int button1 = 0;
+// how long has it been pressed
 static double pressed1 = 0.0;
-const double threshold = 2000.0;    // 2 seconds
+// how long do we need to hold it
+const double threshold = 1000.0;    // in millis
 
 
 // Object class
 // Purpose:
-//		- Creates an interactable cube or ellipsoid based on provided dimensions.
+//		- Creates an interactable object based on provided dimensions.
 class Object:public arInteractableThing {
 
 	public:
@@ -479,7 +487,15 @@ void LeftVirtualHand::extend(arEffector& self, list<arInteractable*>& objects, f
 				selectionMode = 0;
 			}
 		}
-
+	}
+	else if(selectionMode == 1)
+	{
+		//TODO
+		//foreach object
+		// get object location
+		// if object is in cone, then add to selected list
+		//if only one object, select it
+		//else selectionMode = 2, selected list has all the items
 	}
 }
 
@@ -586,18 +602,16 @@ static bool isLyingInCone(float x[], float t[], float b[], float radius, float h
 }
 
 
-// Global objects.
+// Global objects, instruments
 Object theCello(3, 0.5, 0.5, 0.5, "cello.obj");
 Object theViolin(3, 0.5, 0.5, 0.5, "violin.obj");
 Object thePiano(3, 0.5, 0.5, 0.5, "piano.obj");
-
-
 
 // List of objects.
 list<arInteractable*> objects;
 
 // Global effectors.
-RightVirtualHand rightHand("handy.obj");//("Hand.obj");
+RightVirtualHand rightHand("handy.obj"); // loads obj for hand
 LeftVirtualHand leftHand;
 
 // Global sound variables.
@@ -615,14 +629,6 @@ int cpvSound;
 // not needed in our system, but here's some examples.
 // For this program, we just need to transfer each object's placement matrix and whether it is
 // highlighted or not.
-int cubeHighlighted = 0;
-arMatrix4 cubeMatrix;
-int boxHighlighted = 0;
-arMatrix4 boxMatrix;
-int sphereHighlighted = 0;
-arMatrix4 sphereMatrix;
-int ellipseHighlighted = 0;
-arMatrix4 ellipseMatrix;
 arMatrix4 celloMatrix;
 arMatrix4 violinMatrix;
 arMatrix4 pianoMatrix;
@@ -645,14 +651,6 @@ bool start(arMasterSlaveFramework& framework, arSZGClient& client ) {
 
 	// Register shared memory. Not needed for non-cluster-based systems.
 	// framework.addTransferField(char* name, void* address, arDataType type, int numElements);
-	framework.addTransferField("cubeHighlighted", &cubeHighlighted, AR_INT, 1);
-	framework.addTransferField("cubeMatrix", &cubeMatrix, AR_FLOAT, 16);
-	framework.addTransferField("boxHighlighted", &boxHighlighted, AR_INT, 1);
-	framework.addTransferField("boxMatrix", &boxMatrix, AR_FLOAT, 16);
-	framework.addTransferField("sphereHighlighted", &sphereHighlighted, AR_INT, 1);
-	framework.addTransferField("sphereMatrix", &sphereMatrix, AR_FLOAT, 16);
-	framework.addTransferField("ellipseHighlighted", &ellipseHighlighted, AR_INT, 1);
-	framework.addTransferField("ellipseMatrix", &ellipseMatrix, AR_FLOAT, 16);
 	framework.addTransferField("celloMatrix", &celloMatrix, AR_FLOAT, 16);
 	framework.addTransferField("violinMatrix", &violinMatrix, AR_FLOAT, 16);
 	framework.addTransferField("pianoMatrix", &pianoMatrix, AR_FLOAT, 16);
@@ -765,14 +763,6 @@ void preExchange(arMasterSlaveFramework& framework) {
 	
 	// Process user input.
 	
-	
-	
-	/*if(leftHand.getOnButton(1) == 1)
-	{
-		coneselection = !coneselection;
-	}*/
-	
-	
 
 	//const unsigned int numButtons = framework.getNumberButtons();
 
@@ -785,26 +775,33 @@ void preExchange(arMasterSlaveFramework& framework) {
 		coneselection = false;
 	}
 	
+	//TODO
+	//if selectionMode == 2
+	// if arrow key pressed
+	//  if selected quadrant has one, select it, selectionMode = 0
+	//  else redistribute objects
+	
 	button1 = leftHand.getButton(1);
 
-	if(button1) {
-		if(pressed1 == 0.0) {
+	if(button1) //button is down
+	{
+		if(pressed1 == 0.0) //was just pressed
+		{
 			// get time since first I/O in milliseconds
 			pressed1 = currentTime;
-			//cout << "1 down\n";
 		}
 	}
-	else {
-		if(pressed1 > 0.0) 
+	else //button is up
+	{
+		if(pressed1 > 0.0) //button was down, now is up
 		{
-			//cout << "1 up\n";
 			if(coneselection)
 			{
 				selectionMode = 1; // just entered selection mode
 				coneselection = false;
 				
-				
 				// for now lets just find out if our piano is in the cone
+				/*
 				float x[] = {pianoMatrix[12], pianoMatrix[13], pianoMatrix[14]};
 				float height = leftHand.getLength();
 				float radius = height/2.f;
@@ -817,20 +814,21 @@ void preExchange(arMasterSlaveFramework& framework) {
 				cout << "t " << t[0] << " " << t[1] << " " << t[2] << '\n';
 				cout << "b " << b[0] << " " << b[1] << " " << b[2] << '\n';
 				cout << "radius " << radius << '\n';
+				*/
 			}
-			else
+			else //just pointed and clicked but didn't hold down
 			{
-				//i just pointed and clicked but didn't hold down
-				//TODO select what I pointed at
 				selectionMode = 3;
 			}
 		}
 		pressed1 = 0.0;
 	}
 
-	if(pressed1 > 0.0) {
-		if((currentTime - pressed1) > threshold) {
-			coneselection = true;
+	if(pressed1 > 0.0) //button was held down
+	{
+		if((currentTime - pressed1) > threshold) //was it held down long enough?
+		{
+			coneselection = true; //turn flashlight on
 		}
 	}
 	
@@ -849,11 +847,13 @@ void preExchange(arMasterSlaveFramework& framework) {
 	
 	
 	// Play click sound if right hand has grabbed an object.
-	if(rightHand.getGrabbedObject() != 0) {
+	if(rightHand.getGrabbedObject() != 0) 
+	{
 		dsLoop(clickSound, "click.mp3", -1, 1.0, arVector3(0, 0, 0));
 	}
 	// Or reset the trigger
-	else {
+	else 
+	{
 		dsLoop(clickSound, "click.mp3", 0, 1.0, arVector3(0, 0, 0));
 	}
 	
@@ -918,7 +918,6 @@ void preExchange(arMasterSlaveFramework& framework) {
 	}
 	else if(theCello._selected == true && theViolin._selected == true && thePiano._selected == false)
 	{
-	
 		//TODO, fix distance
 		float cvSoundDistance = sqrt((navMatrix[12] - violinMatrix[12])*(navMatrix[12] - violinMatrix[12]) +
 								   (navMatrix[13] - violinMatrix[13])*(navMatrix[13] - violinMatrix[13]) +
@@ -986,6 +985,11 @@ void draw(arMasterSlaveFramework& framework) {
 	framework.loadNavMatrix();
 	
 	// Generate graphics.
+	
+	//TODO
+	//if selectionMode == 2
+	// draw circle, draw miniature of selectedobjects in front of it
+	// draw lines to separate quadrants
 	
 	// Draw the objects.
 	theCello.draw();
