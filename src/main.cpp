@@ -490,12 +490,41 @@ void LeftVirtualHand::extend(arEffector& self, list<arInteractable*>& objects, f
 	}
 	else if(selectionMode == 1)
 	{
-		//TODO
-		//foreach object
-		// get object location
-		// if object is in cone, then add to selected list
-		//if only one object, select it
-		//else selectionMode = 2, selected list has all the items
+		list<arInteractable*>::iterator i;
+		for(i=objects.begin(); i != objects.end(); ++i) 
+		{
+			// get object location
+			arMatrix4 objLoc = ((Object*)(*i)).getMatrix();
+			// if object is in cone, then add to selected list
+			float x[] = {objLoc[12], objLoc[13], objLoc[14]};
+			float height = leftHand.getLength();
+			float radius = height/2.f;
+			arMatrix4 tp = leftHand.getBaseMatrix();
+			arMatrix4 bm = leftHand.getMatrix();
+			float t[] = {tp[12],tp[13],tp[14]};
+			float b[] = {bm[12],bm[13],bm[14]};
+			int numObjects = 0;
+			if(isLyingInCone(x, t, b, radius, height))
+			{
+				++numObjects;
+				//TODO add to list
+			}
+			if(numObjects == 0)
+			{
+				selectionMode = 0;
+			}
+			else if(numObjects == 1)
+			{
+				//if only one object, select it
+				//TODO set the one object to selected
+				selectionMode = 0;
+			}
+			else
+			{
+				//else selectionMode = 2, selected list has all the items
+				selectionMode = 2;
+			}
+		}
 	}
 }
 
