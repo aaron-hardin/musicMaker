@@ -50,6 +50,67 @@ static double pressed1 = 0.0;
 const double threshold = 1000.0;    // in millis
 
 
+/* dotProd, dif and magn copied from http://stackoverflow.com/questions/10768142/verify-if-point-is-inside-a-cone-in-3d-space
+ credit to: furikuretsu
+*/
+static float dotProd(float a[], float b[])
+{
+    return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+}
+/*
+static float* dif(float a[], float b[])
+{
+	float retval [] = {a[0]-b[0],a[1]-b[1],a[2]-b[2]};
+    return retval;
+}
+*/
+static float magn(float a[])
+{
+    return (float) (sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]));
+}
+
+/**
+ * @param x coordinates of point to be tested 
+ * @param t coordinates of apex point of cone
+ * @param b coordinates of center of basement circle
+ * @param aperture in radians
+ 
+ Code copied from http://stackoverflow.com/questions/10768142/verify-if-point-is-inside-a-cone-in-3d-space
+ credit to: furikuretsu
+ 
+ altered to suit this purpose
+ 
+ */
+static bool isLyingInCone(float x[], float t[], float b[], float radius, float height)
+{
+	float aperture = 2.f * atan(radius/height);
+
+    // This is for our convenience
+    float halfAperture = aperture/2.f;
+
+    // Vector pointing to X point from apex
+    float apexToXVect[] = {t[0]-x[0],t[1]-x[1],t[2]-x[2]};
+
+    // Vector pointing from apex to circle-center point.
+    float axisVect[] = {t[0]-b[0],t[1]-b[1],t[2]-b[2]};
+
+    // X is lying in cone only if it's lying in 
+    // infinite version of its cone -- that is, 
+    // not limited by "round basement".
+    // We'll use dotProd() to 
+    // determine angle between apexToXVect and axis.
+    
+	bool isInInfiniteCone = dotProd(apexToXVect,axisVect)/magn(apexToXVect)/magn(axisVect) > cos(halfAperture);
+	
+	// We can safely compare cos() of angles 
+    // between vectors instead of bare angles.
+
+
+    return isInInfiniteCone;
+}
+
+
+
 // Object class
 // Purpose:
 //		- Creates an interactable object based on provided dimensions.
@@ -99,6 +160,7 @@ class Object:public arInteractableThing {
 		float getLength() { return _length; }
 		float getHeight() { return _height; }
 		float getWidth() { return _width; }
+		arOBJRenderer getOBJ() { return loadedOBJ; }
 		
 	private:
 		
@@ -179,6 +241,12 @@ void Object::draw() {
 	glPopMatrix();
 }
 
+
+
+list<Object*> leftSelectedObjects;
+list<Object*> upSelectedObjects;
+list<Object*> rightSelectedObjects;
+list<Object*> downSelectedObjects;
 	
 // RightVirtualHand class
 // Purpose:
@@ -490,41 +558,66 @@ void LeftVirtualHand::extend(arEffector& self, list<arInteractable*>& objects, f
 	}
 	else if(selectionMode == 1)
 	{
+				
+		leftSelectedObjects.clear();
+		upSelectedObjects.clear();
+		rightSelectedObjects.clear();
+		downSelectedObjects.clear();
+		int numObjects = 0;
+	
 		list<arInteractable*>::iterator i;
 		for(i=objects.begin(); i != objects.end(); ++i) 
 		{
 			// get object location
-			arMatrix4 objLoc = ((Object*)(*i)).getMatrix();
+			Object* oby = ((Object*)(*i));
+			arMatrix4 objLoc = oby->getMatrix();
 			// if object is in cone, then add to selected list
 			float x[] = {objLoc[12], objLoc[13], objLoc[14]};
-			float height = leftHand.getLength();
+			float height = getLength();
 			float radius = height/2.f;
-			arMatrix4 tp = leftHand.getBaseMatrix();
-			arMatrix4 bm = leftHand.getMatrix();
+			arMatrix4 tp = getBaseMatrix();
+			arMatrix4 bm = getMatrix();
 			float t[] = {tp[12],tp[13],tp[14]};
 			float b[] = {bm[12],bm[13],bm[14]};
-			int numObjects = 0;
+			
 			if(isLyingInCone(x, t, b, radius, height))
 			{
 				++numObjects;
-				//TODO add to list
-			}
-			if(numObjects == 0)
-			{
-				selectionMode = 0;
-			}
-			else if(numObjects == 1)
-			{
-				//if only one object, select it
-				//TODO set the one object to selected
-				selectionMode = 0;
-			}
-			else
-			{
-				//else selectionMode = 2, selected list has all the items
-				selectionMode = 2;
+				if(numObjects % 4 == 0)
+				{
+					leftSelectedObjects.push_back(oby);
+				}
+				else if(numObjects % 4 == 1)
+				{
+					upSelectedObjects.push_back(oby);
+				}
+				else if(numObjects % 4 == 2)
+				{
+					rightSelectedObjects.push_back(oby);
+				}
+				else if(numObjects % 4 == 3)
+				{
+					downSelectedObjects.push_back(oby);
+				}
 			}
 		}
+		if(numObjects == 0)
+		{
+			selectionMode = 0;
+		}
+		else if(numObjects == 1)
+		{
+			//if only one object, select it
+			selectionMode = 0;
+			Object* oby = leftSelectedObjects.front();
+			//set the one object to selected
+			oby->_selected = !oby->_selected;
+		}
+		else
+		{
+			//else selectionMode = 2, selected lists have all the items
+			selectionMode = 2;
+		}		
 	}
 }
 
@@ -571,64 +664,7 @@ float LeftVirtualHand::getLength()
 	return _currentLength;
 }
 
-/* dotProd, dif and magn copied from http://stackoverflow.com/questions/10768142/verify-if-point-is-inside-a-cone-in-3d-space
- credit to: furikuretsu
-*/
-static float dotProd(float a[], float b[])
-{
-    return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
-}
-/*
-static float* dif(float a[], float b[])
-{
-	float retval [] = {a[0]-b[0],a[1]-b[1],a[2]-b[2]};
-    return retval;
-}
-*/
-static float magn(float a[])
-{
-    return (float) (sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]));
-}
 
-/**
- * @param x coordinates of point to be tested 
- * @param t coordinates of apex point of cone
- * @param b coordinates of center of basement circle
- * @param aperture in radians
- 
- Code copied from http://stackoverflow.com/questions/10768142/verify-if-point-is-inside-a-cone-in-3d-space
- credit to: furikuretsu
- 
- altered to suit this purpose
- 
- */
-static bool isLyingInCone(float x[], float t[], float b[], float radius, float height)
-{
-	float aperture = 2.f * atan(radius/height);
-
-    // This is for our convenience
-    float halfAperture = aperture/2.f;
-
-    // Vector pointing to X point from apex
-    float apexToXVect[] = {t[0]-x[0],t[1]-x[1],t[2]-x[2]};
-
-    // Vector pointing from apex to circle-center point.
-    float axisVect[] = {t[0]-b[0],t[1]-b[1],t[2]-b[2]};
-
-    // X is lying in cone only if it's lying in 
-    // infinite version of its cone -- that is, 
-    // not limited by "round basement".
-    // We'll use dotProd() to 
-    // determine angle between apexToXVect and axis.
-    
-	bool isInInfiniteCone = dotProd(apexToXVect,axisVect)/magn(apexToXVect)/magn(axisVect) > cos(halfAperture);
-	
-	// We can safely compare cos() of angles 
-    // between vectors instead of bare angles.
-
-
-    return isInInfiniteCone;
-}
 
 
 // Global objects, instruments
@@ -805,10 +841,180 @@ void preExchange(arMasterSlaveFramework& framework) {
 	}
 	
 	//TODO
-	//if selectionMode == 2
-	// if arrow key pressed
-	//  if selected quadrant has one, select it, selectionMode = 0
-	//  else redistribute objects
+	if (selectionMode == 2)
+	{
+		if(leftHand.getButton(6))	//		6	"L"
+		{
+			if(leftSelectedObjects.size() == 0)
+			{
+				selectionMode = 0;
+			}
+			else if(leftSelectedObjects.size() == 1)
+			{
+				Object* oby = leftSelectedObjects.front();
+				oby->_selected = !oby->_selected;
+				selectionMode = 0;
+			}
+			else
+			{
+				upSelectedObjects.clear();
+				rightSelectedObjects.clear();
+				downSelectedObjects.clear();
+				int i=0;
+				int count = leftSelectedObjects.size();
+				for(i=0; i<count; ++i)
+				{
+					Object* oby = leftSelectedObjects.front();
+					if(i % 4 == 0)
+					{
+						leftSelectedObjects.push_back(oby);
+					}
+					else if(i % 4 == 1)
+					{
+						upSelectedObjects.push_back(oby);
+					}
+					else if(i % 4 == 2)
+					{
+						rightSelectedObjects.push_back(oby);
+					}
+					else if(i % 4 == 3)
+					{
+						downSelectedObjects.push_back(oby);
+					}
+					leftSelectedObjects.pop_front();
+				}
+			}
+		}
+		else if(leftHand.getButton(9))	//		9	"U"
+		{
+			if(upSelectedObjects.size() == 0)
+			{
+				selectionMode = 0;
+			}
+			else if(upSelectedObjects.size() == 1)
+			{
+				Object* oby = upSelectedObjects.front();
+				oby->_selected = !oby->_selected;
+				selectionMode = 0;
+			}
+			else
+			{
+				leftSelectedObjects.clear();
+				rightSelectedObjects.clear();
+				downSelectedObjects.clear();
+				int i=0;
+				int count = upSelectedObjects.size();
+				for(i=0; i<count; ++i)
+				{
+					Object* oby = upSelectedObjects.front();
+					if(i % 4 == 0)
+					{
+						leftSelectedObjects.push_back(oby);
+					}
+					else if(i % 4 == 1)
+					{
+						upSelectedObjects.push_back(oby);
+					}
+					else if(i % 4 == 2)
+					{
+						rightSelectedObjects.push_back(oby);
+					}
+					else if(i % 4 == 3)
+					{
+						downSelectedObjects.push_back(oby);
+					}
+					upSelectedObjects.pop_front();
+				}
+			}
+		}
+		else if(leftHand.getButton(8)) 	//		8	"R"
+		{
+			if(rightSelectedObjects.size() == 0)
+			{
+				selectionMode = 0;
+			}
+			else if(rightSelectedObjects.size() == 1)
+			{
+				Object* oby = rightSelectedObjects.front();
+				oby->_selected = !oby->_selected;
+				selectionMode = 0;
+			}
+			else
+			{
+				leftSelectedObjects.clear();
+				upSelectedObjects.clear();
+				downSelectedObjects.clear();
+				int i=0;
+				int count = rightSelectedObjects.size();
+				for(i=0; i<count; ++i)
+				{
+					Object* oby = rightSelectedObjects.front();
+					if(i % 4 == 0)
+					{
+						leftSelectedObjects.push_back(oby);
+					}
+					else if(i % 4 == 1)
+					{
+						upSelectedObjects.push_back(oby);
+					}
+					else if(i % 4 == 2)
+					{
+						rightSelectedObjects.push_back(oby);
+					}
+					else if(i % 4 == 3)
+					{
+						downSelectedObjects.push_back(oby);
+					}
+					rightSelectedObjects.pop_front();
+				}
+			}
+		}
+		else if(leftHand.getButton(7))	//		7	"D"
+		{
+			if(downSelectedObjects.size() == 0)
+			{
+				selectionMode = 0;
+			}
+			else if(downSelectedObjects.size() == 1)
+			{
+				Object* oby = downSelectedObjects.front();
+				oby->_selected = !oby->_selected;
+				selectionMode = 0;
+			}
+			else
+			{
+				leftSelectedObjects.clear();
+				upSelectedObjects.clear();
+				rightSelectedObjects.clear();
+				int i=0;
+				int count = downSelectedObjects.size();
+				for(i=0; i<count; ++i)
+				{
+					Object* oby = downSelectedObjects.front();
+					if(i % 4 == 0)
+					{
+						leftSelectedObjects.push_back(oby);
+					}
+					else if(i % 4 == 1)
+					{
+						upSelectedObjects.push_back(oby);
+					}
+					else if(i % 4 == 2)
+					{
+						rightSelectedObjects.push_back(oby);
+					}
+					else if(i % 4 == 3)
+					{
+						downSelectedObjects.push_back(oby);
+					}
+					downSelectedObjects.pop_front();
+				}
+			}
+		}
+		// if arrow key pressed
+		//  if selected quadrant has one, select it, selectionMode = 0
+		//  else redistribute objects
+	}
 	
 	button1 = leftHand.getButton(1);
 
