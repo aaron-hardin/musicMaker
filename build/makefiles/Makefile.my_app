@@ -53,7 +53,10 @@ include $(SZGHOME)/build/make/Makefile.rules
 #
 # OBJS := 
 #
-OBJS := 
+OBJS := \
+  Object$(OBJ_SUFFIX) \
+  LeftVirtualHand$(OBJ_SUFFIX) \
+  RightVirtualHand$(OBJ_SUFFIX)
 
 # It is possible to add flags to the compile line like so. All executables
 # and objects will be compiled with this flag.
