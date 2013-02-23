@@ -652,6 +652,28 @@ glPopAttrib();
 glPopMatrix();
 }  
 
+void drawObjects(float distance)
+{
+	glPushMatrix();
+	glLoadIdentity(); // Load the Identity Matrix to reset our drawing locations  
+	  
+	glTranslatef(0.0f, 0.0f, distance); // Push eveything 5 units back into the scene, otherwise we won't see the primitive  
+	
+	if(leftSelectedObjects.size() > 0)
+	{
+		//cout << "size > 0" << "\n";
+		Object* oby = leftSelectedObjects.front();
+		//cout << "got oby" << "\n";
+		arOBJRenderer* ren = oby->getOBJ();
+		//cout << "got obj" << "\n";
+		ren->draw();
+		//cout << "drew obj" << "\n";
+		//leftSelectedObjects.front()->getOBJ().draw();
+	}
+	
+	glPopMatrix();
+}
+
 
 // draw callback
 // Purposes:
@@ -668,7 +690,8 @@ void draw(arMasterSlaveFramework& framework) {
 	//draw_circle(0.f,0.f,0.2f);
 	if(selectionMode == 2)
 	{
-		renderPrimitive(-2.5f); // Render the primitive  
+		renderPrimitive(-2.5f); // Render the primitive
+		drawObjects(-2.5f); // draw the mini versions
 	}
 	  
 	//if selectionMode == 2

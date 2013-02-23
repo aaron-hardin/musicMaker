@@ -13,6 +13,9 @@ class Object:public arInteractableThing {
 	public:
 	
 		bool _selected;
+		
+		// Object's loaded OBJ file
+		arOBJRenderer loadedOBJ;
 	
 		// Default constructor. 
 		// Parameters are:
@@ -55,7 +58,7 @@ class Object:public arInteractableThing {
 		float getLength() { return _length; }
 		float getHeight() { return _height; }
 		float getWidth() { return _width; }
-		arOBJRenderer getOBJ() { return loadedOBJ; }
+		arOBJRenderer* getOBJ() { return &loadedOBJ; }
 		
 	private:
 		
@@ -65,8 +68,7 @@ class Object:public arInteractableThing {
 		float _length;
 		float _height;
 		float _width;
-		// Object's loaded OBJ file
-		arOBJRenderer loadedOBJ;
+		
 		
 		//bool _selected;
 };
