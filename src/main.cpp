@@ -328,7 +328,7 @@ void preExchange(arMasterSlaveFramework& framework) {
 				}
 			}
 		}
-		else if(leftHand.getButton(8)) 	//		8	"R"
+		else if(leftHand.getButton(7)) 	//		8	"R"
 		{
 			if(rightSelectedObjects.size() == 0)
 			{
@@ -370,7 +370,7 @@ void preExchange(arMasterSlaveFramework& framework) {
 				}
 			}
 		}
-		else if(leftHand.getButton(7))	//		7	"D"
+		else if(leftHand.getButton(8))	//		7	"D"
 		{
 			if(downSelectedObjects.size() == 0)
 			{
@@ -649,6 +649,28 @@ glVertex3f(1.0f, -1.0f, 0.0f); // The bottom right corner
   
 glEnd();  
 glPopAttrib();
+
+glTranslatef(0.0f, 0.0f, 0.1f);
+glPushAttrib(GL_LINE_BIT);
+glLineWidth(2.5); 
+glColor3f(1.0, 0.0, 0.0);
+glBegin(GL_LINES);
+glVertex3f(0.0, 0.0, 0.0);
+glVertex3f(0.95f, 0.95f, 0.0f);
+glEnd();
+glBegin(GL_LINES);
+glVertex3f(0.0, 0.0, 0.0);
+glVertex3f(-0.95f, 0.95f, 0.0f);
+glEnd();
+glBegin(GL_LINES);
+glVertex3f(0.0, 0.0, 0.0);
+glVertex3f(0.95f, -0.95f, 0.0f);
+glEnd();
+glBegin(GL_LINES);
+glVertex3f(0.0, 0.0, 0.0);
+glVertex3f(-0.95f, -0.95f, 0.0f);
+glEnd();
+glPopAttrib();
 glPopMatrix();
 }  
 
@@ -657,18 +679,57 @@ void drawObjects(float distance)
 	glPushMatrix();
 	glLoadIdentity(); // Load the Identity Matrix to reset our drawing locations  
 	  
-	glTranslatef(0.0f, 0.0f, distance); // Push eveything 5 units back into the scene, otherwise we won't see the primitive  
+	glTranslatef(0.0f, 0.0f, distance+0.2f);
 	
-	if(leftSelectedObjects.size() > 0)
+	glScalef(0.3f,0.3f,0.3f);
+	
+	list<Object*>::iterator i;
+	for(i=leftSelectedObjects.begin(); i != leftSelectedObjects.end(); ++i) 
+	//if(leftSelectedObjects.size() > 0)
 	{
-		//cout << "size > 0" << "\n";
+		/*
 		Object* oby = leftSelectedObjects.front();
-		//cout << "got oby" << "\n";
 		arOBJRenderer* ren = oby->getOBJ();
-		//cout << "got obj" << "\n";
 		ren->draw();
-		//cout << "drew obj" << "\n";
+		*/
 		//leftSelectedObjects.front()->getOBJ().draw();
+		glPushMatrix();
+		Object* oby = ((Object*)(*i));
+		glTranslatef(-1.5f*leftSelectedObjects.size(), 0.0f, 0.0f);
+		glScalef(oby->getLength()/leftSelectedObjects.size(), oby->getHeight()/leftSelectedObjects.size(), oby->getWidth()/leftSelectedObjects.size());
+		arOBJRenderer* ren = oby->getOBJ();
+		ren->draw();
+		glPopMatrix();
+	}
+	for(i=upSelectedObjects.begin(); i != upSelectedObjects.end(); ++i) 
+	{
+		glPushMatrix();
+		Object* oby = ((Object*)(*i));
+		glTranslatef(0.0f, 1.5f*upSelectedObjects.size(), 0.0f);
+		glScalef(oby->getLength()/upSelectedObjects.size(), oby->getHeight()/upSelectedObjects.size(), oby->getWidth()/upSelectedObjects.size());
+		arOBJRenderer* ren = oby->getOBJ();
+		ren->draw();
+		glPopMatrix();
+	}
+	for(i=rightSelectedObjects.begin(); i != rightSelectedObjects.end(); ++i) 
+	{
+		glPushMatrix();
+		Object* oby = ((Object*)(*i));
+		glTranslatef(1.5f*rightSelectedObjects.size(), 0.0f, 0.0f);
+		glScalef(oby->getLength()/rightSelectedObjects.size(), oby->getHeight()/rightSelectedObjects.size(), oby->getWidth()/rightSelectedObjects.size());
+		arOBJRenderer* ren = oby->getOBJ();
+		ren->draw();
+		glPopMatrix();
+	}
+	for(i=downSelectedObjects.begin(); i != downSelectedObjects.end(); ++i) 
+	{
+		glPushMatrix();
+		Object* oby = ((Object*)(*i));
+		glTranslatef(0.0f, -1.5f*downSelectedObjects.size(), 0.0f);
+		glScalef(oby->getLength()/downSelectedObjects.size(), oby->getHeight()/downSelectedObjects.size(), oby->getWidth()/downSelectedObjects.size());
+		arOBJRenderer* ren = oby->getOBJ();
+		ren->draw();
+		glPopMatrix();
 	}
 	
 	glPopMatrix();
