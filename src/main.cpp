@@ -633,45 +633,55 @@ void draw_circle(float x, float y, float radius) {
     glPopMatrix();
 }
 
-void renderPrimitive (float distance) {  
-glPushMatrix();
-glLoadIdentity(); // Load the Identity Matrix to reset our drawing locations  
-  
-glTranslatef(0.0f, 0.0f, distance); // Push eveything 5 units back into the scene, otherwise we won't see the primitive  
-glPushAttrib(GL_COLOR_BUFFER_BIT);
-glClearColor(0, 0, 0, 0);
-glBegin(GL_QUADS); // Start drawing a quad primitive  
-  
-glVertex3f(-1.0f, -1.0f, 0.0f); // The bottom left corner  
-glVertex3f(-1.0f, 1.0f, 0.0f); // The top left corner  
-glVertex3f(1.0f, 1.0f, 0.0f); // The top right corner  
-glVertex3f(1.0f, -1.0f, 0.0f); // The bottom right corner  
-  
-glEnd();  
-glPopAttrib();
+/*
+Thanks to swiftless tutorials: http://www.swiftless.com/tutorials/opengl/square.html
+For code on drawing a square
 
-glTranslatef(0.0f, 0.0f, 0.1f);
-glPushAttrib(GL_LINE_BIT);
-glLineWidth(2.5); 
-glColor3f(1.0, 0.0, 0.0);
-glBegin(GL_LINES);
-glVertex3f(0.0, 0.0, 0.0);
-glVertex3f(0.95f, 0.95f, 0.0f);
-glEnd();
-glBegin(GL_LINES);
-glVertex3f(0.0, 0.0, 0.0);
-glVertex3f(-0.95f, 0.95f, 0.0f);
-glEnd();
-glBegin(GL_LINES);
-glVertex3f(0.0, 0.0, 0.0);
-glVertex3f(0.95f, -0.95f, 0.0f);
-glEnd();
-glBegin(GL_LINES);
-glVertex3f(0.0, 0.0, 0.0);
-glVertex3f(-0.95f, -0.95f, 0.0f);
-glEnd();
-glPopAttrib();
-glPopMatrix();
+This function draws a square with separating lines for quadrants
+*/
+void renderPrimitive (float distance) 
+{  
+	glPushMatrix();
+	glLoadIdentity(); // Load the Identity Matrix to reset our drawing locations  
+	  
+	glTranslatef(0.0f, 0.0f, distance); // Push eveything 5 units back into the scene, otherwise we won't see the primitive  
+	glPushAttrib(GL_COLOR_BUFFER_BIT);
+	glClearColor(0, 0, 0, 0);
+	glBegin(GL_QUADS); // Start drawing a quad primitive  
+	  
+	glVertex3f(-1.0f, -1.0f, 0.0f); // The bottom left corner  
+	glVertex3f(-1.0f, 1.0f, 0.0f); // The top left corner  
+	glVertex3f(1.0f, 1.0f, 0.0f); // The top right corner  
+	glVertex3f(1.0f, -1.0f, 0.0f); // The bottom right corner  
+	  
+	glEnd();  
+	glPopAttrib();
+	/*
+	Thanks to Gavin: http://www.opengl.org/discussion_boards/showthread.php/124875-How-to-draw-a-line-using-OpenGL-programme
+	For code on drawing lines
+	*/
+	glTranslatef(0.0f, 0.0f, 0.1f);
+	glPushAttrib(GL_LINE_BIT);
+	glLineWidth(2.5); 
+	glColor3f(1.0, 0.0, 0.0);
+	glBegin(GL_LINES);
+	glVertex3f(0.0, 0.0, 0.0);
+	glVertex3f(0.95f, 0.95f, 0.0f);
+	glEnd();
+	glBegin(GL_LINES);
+	glVertex3f(0.0, 0.0, 0.0);
+	glVertex3f(-0.95f, 0.95f, 0.0f);
+	glEnd();
+	glBegin(GL_LINES);
+	glVertex3f(0.0, 0.0, 0.0);
+	glVertex3f(0.95f, -0.95f, 0.0f);
+	glEnd();
+	glBegin(GL_LINES);
+	glVertex3f(0.0, 0.0, 0.0);
+	glVertex3f(-0.95f, -0.95f, 0.0f);
+	glEnd();
+	glPopAttrib();
+	glPopMatrix();
 }  
 
 void drawObjects(float distance)
@@ -751,13 +761,9 @@ void draw(arMasterSlaveFramework& framework) {
 	//draw_circle(0.f,0.f,0.2f);
 	if(selectionMode == 2)
 	{
-		renderPrimitive(-2.5f); // Render the primitive
+		renderPrimitive(-2.5f); // draws square with quadrants
 		drawObjects(-2.5f); // draw the mini versions
 	}
-	  
-	//if selectionMode == 2
-	// draw circle, draw miniature of selectedobjects in front of it
-	// draw lines to separate quadrants
 	
 	// Draw the objects.
 	theCello.draw();
