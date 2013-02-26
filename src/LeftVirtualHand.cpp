@@ -116,6 +116,11 @@ void LeftVirtualHand::extend(arEffector& self, list<arInteractable*>& objects, f
 				selectionMode = 0;
 			}
 		}
+		selectionMode = 0;
+	}
+	else if(selectionMode==3)
+	{
+		selectionMode = 0;
 	}
 	else if(selectionMode == 1)
 	{
@@ -184,7 +189,8 @@ void LeftVirtualHand::extend(arEffector& self, list<arInteractable*>& objects, f
 
 
 // Left hand effector's draw function.
-void LeftVirtualHand::draw() const {
+void LeftVirtualHand::draw() //const 
+{
 
 	// Always start with glPushMatrix to avoid matrix multiplications done here from
 	// affecting other portions of the scene.
@@ -196,7 +202,14 @@ void LeftVirtualHand::draw() const {
 		// Draw the left hand red.
 		glColor3f(1.0, 0.0, 0.0);
 		// Create the 1 ft. cube.
-		glutSolidCube(1.0);
+		if(!handy)
+		{
+			glutSolidCube(1.0);
+		}
+		else
+		{
+			loadedOBJ.draw();
+		}
 		// Superimpose slightly larger black wireframe cube to make it easier to see shape.
 		
 		if(coneselection == true)
@@ -213,9 +226,12 @@ void LeftVirtualHand::draw() const {
 			glTranslatef(0.0,0.0,height/2.0f);
 			glScalef(2.0/12.0, 2.0/12.0, _currentLength);
 		}
-		
-		glColor3f(0.0, 0.0, 0.0);
-		glutWireCube(1.01);
+		glColor3f(0.0, 0.0, 0.0); //TODO fix the bug that the color is left as red here and draws a red square
+		if (!handy)
+		{
+			glColor3f(0.0, 0.0, 0.0);
+			glutWireCube(1.01);
+		}
 	// Always finish with glPopMatrix to match glPushMatrix above.
 	glPopMatrix();
 }

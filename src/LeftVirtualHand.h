@@ -26,7 +26,15 @@ class LeftVirtualHand:public arEffector {
 		//		loAxis - index in device array of desired first axis, (2 for left Wiimote)
 		//				 which gets mapped to virtual axis index 0 by default
 		//		axisOffset - offset for mapping virtual axes (0 for no offset)
-		LeftVirtualHand():arEffector(2, 11, 11, 0, 2, 2, 0) {
+		LeftVirtualHand(const string& filename = ""):arEffector(2, 11, 11, 0, 2, 2, 0) {
+		handy = false;
+		if(filename != "") {
+			handy = true;
+			if(!loadedOBJ.readOBJ(filename,"data")) { 
+				cout << "Cound not load OBJ file: " << filename << '\n';
+				handy = false;
+			}
+		}
 		
 			// Set "tip" or point of interaction. Make ray initially 5 ft. long because we're going
 			// to dynamically extend it to whatever object it touches first.
@@ -64,13 +72,16 @@ class LeftVirtualHand:public arEffector {
 		void extend(arEffector& self, list<arInteractable*>& objects, float maxLength = 15.0);
 		
 		// Draw a representation for the right hand.
-		void draw() const;
+		void draw(); //const;
 		
 		float getLength();
 	
 	private:
 		float _currentLength;
 		float _interactionDistance;
+		
+		bool handy;
+		arOBJRenderer loadedOBJ;
 	
 };
 
