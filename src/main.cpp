@@ -766,6 +766,7 @@ void drawObjects(float distance)
 	
 	glScalef(0.3f,0.3f,0.3f);
 	
+	int count = 0;
 	list<Object*>::iterator i;
 	for(i=leftSelectedObjects.begin(); i != leftSelectedObjects.end(); ++i) 
 	//if(leftSelectedObjects.size() > 0)
@@ -778,37 +779,53 @@ void drawObjects(float distance)
 		//leftSelectedObjects.front()->getOBJ().draw();
 		glPushMatrix();
 		Object* oby = ((Object*)(*i));
-		glTranslatef(-1.5f*leftSelectedObjects.size(), 0.0f, 0.0f);
+		
+		++count;
+		glTranslatef(-1.5f*(leftSelectedObjects.size()/count), 0.0f, 0.0f);
+		
+		
 		glScalef(oby->getLength()/leftSelectedObjects.size(), oby->getHeight()/leftSelectedObjects.size(), oby->getWidth()/leftSelectedObjects.size());
 		arOBJRenderer* ren = oby->getOBJ();
 		ren->draw();
 		glPopMatrix();
 	}
+	count = 0;
 	for(i=upSelectedObjects.begin(); i != upSelectedObjects.end(); ++i) 
 	{
 		glPushMatrix();
 		Object* oby = ((Object*)(*i));
-		glTranslatef(0.0f, 1.5f*upSelectedObjects.size(), 0.0f);
+		
+		++count;
+		glTranslatef(0.0f, 1.5f*(upSelectedObjects.size()/count), 0.0f);
+		
 		glScalef(oby->getLength()/upSelectedObjects.size(), oby->getHeight()/upSelectedObjects.size(), oby->getWidth()/upSelectedObjects.size());
 		arOBJRenderer* ren = oby->getOBJ();
 		ren->draw();
 		glPopMatrix();
 	}
+	count = 0;
 	for(i=rightSelectedObjects.begin(); i != rightSelectedObjects.end(); ++i) 
 	{
 		glPushMatrix();
 		Object* oby = ((Object*)(*i));
-		glTranslatef(1.5f*rightSelectedObjects.size(), 0.0f, 0.0f);
+		
+		++count;
+		glTranslatef(1.5f*(rightSelectedObjects.size()/count), 0.0f, 0.0f);
+		
 		glScalef(oby->getLength()/rightSelectedObjects.size(), oby->getHeight()/rightSelectedObjects.size(), oby->getWidth()/rightSelectedObjects.size());
 		arOBJRenderer* ren = oby->getOBJ();
 		ren->draw();
 		glPopMatrix();
 	}
+	count = 0;
 	for(i=downSelectedObjects.begin(); i != downSelectedObjects.end(); ++i) 
 	{
 		glPushMatrix();
 		Object* oby = ((Object*)(*i));
-		glTranslatef(0.0f, -1.5f*downSelectedObjects.size(), 0.0f);
+		
+		++count;
+		glTranslatef(0.0f, -1.5f*(downSelectedObjects.size()/count), 0.0f);
+		
 		glScalef(oby->getLength()/downSelectedObjects.size(), oby->getHeight()/downSelectedObjects.size(), oby->getWidth()/downSelectedObjects.size());
 		arOBJRenderer* ren = oby->getOBJ();
 		ren->draw();
