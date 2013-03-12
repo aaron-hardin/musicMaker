@@ -14,12 +14,13 @@
 #include "arGlut.h"
 #include "arOBJ.h"
 
-
 extern double currentTimeGlobal;
 // music note to be used for animation
 extern arOBJRenderer musicNotey;
 extern bool coneselection;
 extern int selectionMode;
+extern vector<arInteractable*> objects;
 
+void renderPrimitive (float distance, bool separationLines);
 
 #endif

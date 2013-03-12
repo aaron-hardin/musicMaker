@@ -26,6 +26,9 @@
 #include "LeftVirtualHand.h"
 #include "RightVirtualHand.h"
 #include "selectedObjects.h"
+#include "CallFunction.h"
+#include "Import.h"
+#include "VirtualDirectory.h"
 
 // Feet to local units conversion.
 // For example, if you use centimeters to create your models, then set this to 12*2.54 or 30.48 to
@@ -52,7 +55,8 @@ static int button1 = 0;
 static double pressed1 = 0.0;
 // how long do we need to hold it
 const double threshold = 1000.0;    // in millis
-
+static double pressedImport = 0.0;
+static double dirButtonPress = 0.0;
 
 
 list<Object*> leftSelectedObjects;
@@ -64,7 +68,7 @@ list<Object*> downSelectedObjects;
 
 
 
-
+VirtualDirectory virtualdirectory;
 
 
 
@@ -74,7 +78,7 @@ Object theViolin(3, 0.5, 0.5, 0.5, "violin.obj");
 Object thePiano(3, 2, 2, 2, "piano.obj");
 
 // List of objects.
-list<arInteractable*> objects;
+vector<arInteractable*> objects;
 
 // Global effectors.
 RightVirtualHand rightHand("handy.obj"); // loads obj for hand
@@ -95,13 +99,15 @@ int cpvSound;
 // not needed in our system, but here's some examples.
 // For this program, we just need to transfer each object's placement matrix and whether it is
 // highlighted or not.
-arMatrix4 celloMatrix;
-arMatrix4 violinMatrix;
-arMatrix4 pianoMatrix;
+//arMatrix4 celloMatrix;
+//arMatrix4 violinMatrix;
+//arMatrix4 pianoMatrix;
 
 
-
-
+void uselessCallback(vector<string> args)
+{
+	cout << "useless callback" << flush;
+}
 
 // start callback
 // Purposes:
@@ -113,13 +119,29 @@ arMatrix4 pianoMatrix;
 // Notes: 
 //		DO NOT initialize OpenGL here. The start callback is called before window creation. 
 //		Instead initialize OpenGL in the windowStartGL callback.
-bool start(arMasterSlaveFramework& framework, arSZGClient& client ) {
+bool start(arMasterSlaveFramework& framework, arSZGClient& client ) 
+{
 
+	CallFunction cf;
+	cf.init();
+	
 	// Register shared memory. Not needed for non-cluster-based systems.
 	// framework.addTransferField(char* name, void* address, arDataType type, int numElements);
-	framework.addTransferField("celloMatrix", &celloMatrix, AR_FLOAT, 16);
-	framework.addTransferField("violinMatrix", &violinMatrix, AR_FLOAT, 16);
-	framework.addTransferField("pianoMatrix", &pianoMatrix, AR_FLOAT, 16);
+	//list<arMatrix4*> objMatrices;
+	
+	vector<arInteractable*>::iterator i;
+	for(i=objects.begin(); i != objects.end(); ++i) 
+	{
+		Object* obj = ((Object*)(*i));
+		ostringstream ostr;
+		ostr << "objMatrix" << &i;
+		arMatrix4 obM = obj->matrix;
+		framework.addTransferField(ostr.str(), &obM, AR_FLOAT, 16);
+	}
+
+	//framework.addTransferField("celloMatrix", &celloMatrix, AR_FLOAT, 16);
+	//framework.addTransferField("violinMatrix", &violinMatrix, AR_FLOAT, 16);
+	//framework.addTransferField("pianoMatrix", &pianoMatrix, AR_FLOAT, 16);
 	
 	
 	// Set up navigation. 
@@ -169,7 +191,7 @@ bool start(arMasterSlaveFramework& framework, arSZGClient& client ) {
 	
 	cpvSound = dsLoop("cpv", "world", "cpv.mp3", 1, 1.0, arVector3(0, 5, -6)); 
 	
-	musicNotey.readOBJ("MusicNote.obj","data");
+	musicNotey.readOBJ("MusicNote.obj","data/obj");
 	
 	// Return true if everything is initialized correctly.
 	return true;
@@ -235,6 +257,40 @@ void preExchange(arMasterSlaveFramework& framework) {
 	// in milliseconds
 	double currentTime = framework.getTime();
 
+	if((!virtualdirectory.findingFile) && rightHand.getOnButton(4) && (currentTime-pressedImport)>1000)
+	{
+		pressedImport = currentTime;
+		//Import::import("piano.obj");
+		virtualdirectory.startBrowse("import", &Import::importCallback);
+	}
+	else if(virtualdirectory.findingFile)
+	{
+		// TODO make buttons do things
+		if (leftHand.getOnButton(9) || (leftHand.getButton(9) && (currentTime-dirButtonPress)>150))
+		{
+			virtualdirectory.upPressed();
+			dirButtonPress = currentTime;
+		}
+		else if (leftHand.getOnButton(8) || (leftHand.getButton(8) && (currentTime-dirButtonPress)>150))
+		{
+			virtualdirectory.downPressed();
+			dirButtonPress = currentTime;
+		}
+		else if (rightHand.getOnButton(4))// && (currentTime-dirButtonPress)>200)
+		{
+			pressedImport = currentTime;
+			virtualdirectory.selectFile();
+			dirButtonPress = currentTime;
+			//cout << "wth" << flush;
+		}
+		else if (rightHand.getOnButton(5))
+		{
+			pressedImport = currentTime;
+			virtualdirectory.findingFile = false;
+		}
+	}
+	
+	
 	if(leftHand.getButton(0) || leftHand.getButton(2) || leftHand.getButton(3) || leftHand.getButton(4) || leftHand.getButton(5) || leftHand.getButton(10))
 	{
 		selectionMode = 0;
@@ -477,8 +533,12 @@ void preExchange(arMasterSlaveFramework& framework) {
 	rightHand.updateState(framework.getInputState());
 	leftHand.updateState(framework.getInputState());
 	// Handle any interaction with the objects (see interaction/arInteractionUtilities.h).
-	ar_pollingInteraction(rightHand, objects);
-	ar_pollingInteraction(leftHand, objects);
+	
+	list<arInteractable*> objectlist;
+	std::copy(objects.begin (), objects.end (), std::back_inserter(objectlist));
+	
+	ar_pollingInteraction(rightHand, objectlist);
+	ar_pollingInteraction(leftHand, objectlist);
 	
 	
 	// Play click sound if right hand has grabbed an object.
@@ -497,12 +557,23 @@ void preExchange(arMasterSlaveFramework& framework) {
 	// Update shared memory.
 	
 	// Transfer data about objects to slave nodes.
-	celloMatrix = theCello.getMatrix();
-	violinMatrix = theViolin.getMatrix();
-	pianoMatrix = thePiano.getMatrix();
-	
+//	celloMatrix = theCello.getMatrix();
+//	violinMatrix = theViolin.getMatrix();
+//	pianoMatrix = thePiano.getMatrix();
+
+	vector<arInteractable*>::iterator i;
+	for(i=objects.begin(); i != objects.end(); ++i) 
+	{
+		Object* oby = ((Object*)(*i));
+		oby->matrix = oby->getMatrix();
+	}
+
 	
 	arMatrix4 navMatrix = ar_getNavMatrix();
+	
+	arMatrix4 celloMatrix = ((Object*)objects[0])->matrix;
+	arMatrix4 violinMatrix = ((Object*)objects[1])->matrix;
+	arMatrix4 pianoMatrix = ((Object*)objects[2])->matrix;
 	
 	dsLoop(celloSound, "cello.mp3", 0, 0, arVector3(celloMatrix[12], celloMatrix[13], celloMatrix[14]));
 	dsLoop(violinSound, "violin.mp3", 0, 0, arVector3(violinMatrix[12], violinMatrix[13], violinMatrix[14]));
@@ -677,9 +748,18 @@ void postExchange(arMasterSlaveFramework& framework) {
 		leftHand.updateState(framework.getInputState());
 		
 		// Synchronize shared memory.
-		theCello.setMatrix(celloMatrix.v);
-		theViolin.setMatrix(violinMatrix.v);
-		thePiano.setMatrix(pianoMatrix.v);
+		//theCello.setMatrix(celloMatrix.v);
+		//theViolin.setMatrix(violinMatrix.v);
+		//thePiano.setMatrix(pianoMatrix.v);
+		
+		
+		vector<arInteractable*>::iterator i;
+		for(i=objects.begin(); i != objects.end(); ++i) 
+		{
+			Object* oby = ((Object*)(*i));
+			oby->setMatrix(oby->matrix.v);
+		}
+		
 	}
 }
 
@@ -712,7 +792,7 @@ For code on drawing a square
 
 This function draws a square with separating lines for quadrants
 */
-void renderPrimitive (float distance) 
+void renderPrimitive (float distance, bool separationLines = true) 
 {  
 	glPushMatrix();
 	glLoadIdentity(); // Load the Identity Matrix to reset our drawing locations  
@@ -733,27 +813,30 @@ void renderPrimitive (float distance)
 	Thanks to Gavin: http://www.opengl.org/discussion_boards/showthread.php/124875-How-to-draw-a-line-using-OpenGL-programme
 	For code on drawing lines
 	*/
-	glTranslatef(0.0f, 0.0f, 0.1f);
-	glPushAttrib(GL_LINE_BIT);
-	glLineWidth(2.5); 
-	glColor3f(1.0, 0.0, 0.0);
-	glBegin(GL_LINES);
-	glVertex3f(0.0, 0.0, 0.0);
-	glVertex3f(0.95f, 0.95f, 0.0f);
-	glEnd();
-	glBegin(GL_LINES);
-	glVertex3f(0.0, 0.0, 0.0);
-	glVertex3f(-0.95f, 0.95f, 0.0f);
-	glEnd();
-	glBegin(GL_LINES);
-	glVertex3f(0.0, 0.0, 0.0);
-	glVertex3f(0.95f, -0.95f, 0.0f);
-	glEnd();
-	glBegin(GL_LINES);
-	glVertex3f(0.0, 0.0, 0.0);
-	glVertex3f(-0.95f, -0.95f, 0.0f);
-	glEnd();
-	glPopAttrib();
+	if (separationLines)
+	{
+		glTranslatef(0.0f, 0.0f, 0.1f);
+		glPushAttrib(GL_LINE_BIT);
+		glLineWidth(2.5); 
+		glColor3f(1.0, 0.0, 0.0);
+		glBegin(GL_LINES);
+		glVertex3f(0.0, 0.0, 0.0);
+		glVertex3f(0.95f, 0.95f, 0.0f);
+		glEnd();
+		glBegin(GL_LINES);
+		glVertex3f(0.0, 0.0, 0.0);
+		glVertex3f(-0.95f, 0.95f, 0.0f);
+		glEnd();
+		glBegin(GL_LINES);
+		glVertex3f(0.0, 0.0, 0.0);
+		glVertex3f(0.95f, -0.95f, 0.0f);
+		glEnd();
+		glBegin(GL_LINES);
+		glVertex3f(0.0, 0.0, 0.0);
+		glVertex3f(-0.95f, -0.95f, 0.0f);
+		glEnd();
+		glPopAttrib();
+	}
 	glPopMatrix();
 }  
 
@@ -853,10 +936,25 @@ void draw(arMasterSlaveFramework& framework) {
 		drawObjects(-2.5f); // draw the mini versions
 	}
 	
+	if(virtualdirectory.findingFile)
+	{
+		//cout << "starting vd.draw\n" << flush;
+		virtualdirectory.draw();
+		//cout << "end vd.draw\n" << flush;
+	}
+	
 	// Draw the objects.
-	theCello.draw();
-	theViolin.draw();
-	thePiano.draw();
+//	theCello.draw();
+//	theViolin.draw();
+//	thePiano.draw();
+	
+	vector<arInteractable*>::iterator i;
+	for(i=objects.begin(); i != objects.end(); ++i) 
+	{
+		Object* oby = ((Object*)(*i));
+		oby->draw();
+	}
+
 	
 	// Draw the effectors.
 	rightHand.draw();

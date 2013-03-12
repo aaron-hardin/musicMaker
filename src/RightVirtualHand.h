@@ -28,7 +28,7 @@ class RightVirtualHand:public arEffector {
 		//		axisOffset - offset for mapping virtual axes (0 for no offset)
 		RightVirtualHand(const string& filename = ""):arEffector(1, 11, 0, 0, 2, 0, 0) {
 		if(filename != "") {
-			if(!loadedOBJ.readOBJ(filename)) { 
+			if(!loadedOBJ.readOBJ(filename, "data/obj")) { 
 				cout << "Cound not load OBJ file: " << filename << '\n';
 			}
 		}
@@ -65,7 +65,7 @@ class RightVirtualHand:public arEffector {
 		}
 		
 		// Resizes distance selector for basic collision detection.
-		void detectCollisions(arEffector& self, list<arInteractable*>& objects);
+		void detectCollisions(arEffector& self, vector<arInteractable*>& objects);
 		
 		// Draw a representation for the right hand.
 		void draw() ;//const;

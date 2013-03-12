@@ -24,7 +24,7 @@ POST_LINK_LINE = $(LIB_SEARCH_FLAGS) $(SZG_LIBRARY_LIBS) $(SZG_OPTIONAL_LIBS) $(
 # Every executable file should be listed below, seperated by spaces.
 # NOTE: you must use the $(EXE) suffix for compatibility between Unix
 # and Win32.
-ALL := musicMaker$(EXE)
+ALL := Kosmos$(EXE)
 
 
 # Makefile.rules defines standard target rules like "clean"
@@ -56,7 +56,10 @@ include $(SZGHOME)/build/make/Makefile.rules
 OBJS := \
   Object$(OBJ_SUFFIX) \
   LeftVirtualHand$(OBJ_SUFFIX) \
-  RightVirtualHand$(OBJ_SUFFIX)
+  RightVirtualHand$(OBJ_SUFFIX) \
+  VirtualDirectory$(OBJ_SUFFIX) \
+  CallFunction$(OBJ_SUFFIX) \
+  Import$(OBJ_SUFFIX)
 
 # It is possible to add flags to the compile line like so. All executables
 # and objects will be compiled with this flag.
@@ -95,6 +98,6 @@ OBJS := \
 # are stored.
 #	
 
-musicMaker$(EXE): main$(OBJ_SUFFIX) $(OBJS) $(SZG_LIBRARY_DEPS)
+Kosmos$(EXE): main$(OBJ_SUFFIX) $(OBJS) $(SZG_LIBRARY_DEPS)
 	$(SZG_USR_FIRST) main$(OBJ_SUFFIX) $(OBJS) $(SZG_USR_SECOND)
 	$(COPY)

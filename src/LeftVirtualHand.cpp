@@ -87,7 +87,7 @@ void LeftVirtualHand::extend(arEffector& self, arInteractable* object, float max
 // Left hand effector's extend function for multiple objects.
 // Purpose:
 //		- Extends effector until it touches an object or reaches the maximum length.
-void LeftVirtualHand::extend(arEffector& self, list<arInteractable*>& objects, float maxLength) {
+void LeftVirtualHand::extend(arEffector& self, vector<arInteractable*>& objects, float maxLength) {
 
 	// Return if grabbing an object.
 	if(getGrabbedObject() != 0) return;
@@ -96,17 +96,20 @@ void LeftVirtualHand::extend(arEffector& self, list<arInteractable*>& objects, f
 	_currentLength = 0.0;
 	setTipOffset(arVector3(0, 0, -_currentLength));
 
+	list<arInteractable*> objectlist;
+	std::copy(objects.begin (), objects.end (), std::back_inserter(objectlist));
+	
 	// Check if the maximum length has been reached or an object has been touched.
-	while(_currentLength < maxLength && !ar_pollingInteraction(self, objects)) {
+	while(_currentLength < maxLength && !ar_pollingInteraction(self, objectlist)) {
 		// If not, increase tip length by interaction distance.
 		_currentLength += _interactionDistance;
 		setTipOffset(arVector3(0, 0, -_currentLength));
 	}
-	if(selectionMode == 3 && ar_pollingInteraction(self, objects)) //if it interacted
+	if(selectionMode == 3 && ar_pollingInteraction(self, objectlist)) //if it interacted
 	{
 		//cout << "hit an object" << '\n';
 		//find out which object it interacted with
-		list<arInteractable*>::iterator i;
+		vector<arInteractable*>::iterator i;
 		for(i=objects.begin(); i != objects.end(); ++i) 
 		{
 			if(ar_pollingInteraction(self, *i))
@@ -131,7 +134,7 @@ void LeftVirtualHand::extend(arEffector& self, list<arInteractable*>& objects, f
 		downSelectedObjects.clear();
 		int numObjects = 0;
 	
-		list<arInteractable*>::iterator i;
+		vector<arInteractable*>::iterator i;
 		for(i=objects.begin(); i != objects.end(); ++i) 
 		{
 			// get object location

@@ -16,6 +16,7 @@ class Object:public arInteractableThing {
 		
 		// Object's loaded OBJ file
 		arOBJRenderer loadedOBJ;
+		arMatrix4 matrix;
 	
 		// Default constructor. 
 		// Parameters are:
@@ -23,7 +24,7 @@ class Object:public arInteractableThing {
 		//		length - length (X-axis) of object
 		//		height - height (Y-axis) of object
 		//		width - width (Z-axis) of object
-		Object(int type = 0, float length = 1.0, float height = 1.0, float width = 1.0, const string& filename = ""):arInteractableThing() 
+		Object(int type = 0, float length = 1.0, float height = 1.0, float width = 1.0, const string& filename = "", const string& path ="data/obj"):arInteractableThing() 
 		{
 			// Track values.
 			_type = type;
@@ -32,16 +33,23 @@ class Object:public arInteractableThing {
 			_width = width;
 			_selected = false;
 			// Read OBJ file if provided.
-			if(filename != "") {
-				cout << "loading " << filename << '\n';
+			if(filename != "") 
+			{
+				cout << "loading " << filename << "..." << '\n';
 				cout.flush();
-				if(!loadedOBJ.readOBJ(filename,"data")) { 
+				if(!loadedOBJ.readOBJ(filename,path)) 
+				{ 
 					cout << "Cound not load OBJ file: " << filename << '\n';
 					_type = -1;
 				}
-				else if(_type == 0) {
+				else if(_type == 0) 
+				{
 					// Set type to loaded file
 					_type = 2;
+				}
+				else
+				{
+					cout << "loaded " << filename << '\n';
 				}
 			}
 			// invalid type and file combination

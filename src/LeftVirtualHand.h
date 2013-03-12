@@ -30,7 +30,7 @@ class LeftVirtualHand:public arEffector {
 		handy = false;
 		if(filename != "") {
 			handy = true;
-			if(!loadedOBJ.readOBJ(filename,"data")) { 
+			if(!loadedOBJ.readOBJ(filename,"data/obj")) { 
 				cout << "Cound not load OBJ file: " << filename << '\n';
 				handy = false;
 			}
@@ -69,7 +69,7 @@ class LeftVirtualHand:public arEffector {
 		
 		// Manipulator to make the effector extend until it touches an object or reaches
 		// a maximum length (15 ft. by default).
-		void extend(arEffector& self, list<arInteractable*>& objects, float maxLength = 15.0);
+		void extend(arEffector& self, vector<arInteractable*>& objects, float maxLength = 15.0);
 		
 		// Draw a representation for the right hand.
 		void draw(); //const;

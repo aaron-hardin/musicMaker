@@ -3,7 +3,8 @@
 
 
 // Interactable object's draw function.
-void Object::draw() {
+void Object::draw() 
+{
   	// Always start with glPushMatrix to avoid matrix multiplications done here from
 	// affecting other portions of the scene.
 	glPushMatrix();

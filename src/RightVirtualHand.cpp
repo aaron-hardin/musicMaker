@@ -7,7 +7,7 @@
 // Notes:
 //		The list must be a list of Object instances, defined above.
 //		This function does not account for rotation of the object or the effector.
-void RightVirtualHand::detectCollisions(arEffector& self, list<arInteractable*>& objects) {
+void RightVirtualHand::detectCollisions(arEffector& self, vector<arInteractable*>& objects) {
 
 	// Return if grabbing an object.
 	if(getGrabbedObject() != 0) return;
@@ -20,7 +20,7 @@ void RightVirtualHand::detectCollisions(arEffector& self, list<arInteractable*>&
 	float closestDistance = maxDistance;
 	
 	// Step through list of objects and test each one for collisions.
-	for(list<arInteractable*>::iterator it=objects.begin(); it != objects.end(); ++it) {
+	for(vector<arInteractable*>::iterator it=objects.begin(); it != objects.end(); ++it) {
 	
 		// Get information about object's position and dimensions.
 		const arMatrix4 objectMatrix = (*it)->getMatrix();
