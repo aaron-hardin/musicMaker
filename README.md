@@ -3,23 +3,30 @@ musicMaker
 
 An Aszgard project for homework for Virtual Reality
 
+Selection:
 Particulars about this application, you can select using the '1' on either wiimote.
-Selecting the original musical objects makes them play noise. 
+Selecting the original (see import below) musical objects makes them play noise. 
 Using the 'A' buttons you can move any object.
 
+Import:
 Using the '-' button on the right hand you can import objects, selection is done with
 the left wiimote, up and down arrows and the right '-' button to select. Home button on
 right wiimote ends selection.
 
+SQUAD:
 The modified SQUAD technique uses the left wiimote, holding down the '1' button opens the 
 selection menu. Once the menu is open, the arrow keys on the dpad are used for selection.
 the SQUAD works by filtering through objects in certain quadrants. 
 ie. if there are more than one item in the top quadrant and you press the up arrow then 
 the items in that quadrant will redistribute themselves in all the quadrants.
 
+Running notes:
 Note: in order for the music to work the mp3 files need to be copied from the 
 data/music folder into aszgard5/szg/rsc
 
+there is a README.txt because it was required by instructor, there is a README.md because
+that is the defualt github readme. If there is any ambiguity, the md is taken to be the
+accurate version
 <br /><br /><br /><br />
 
 original readme from demo

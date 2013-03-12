@@ -1,3 +1,11 @@
+/*
+Summary: this function is used to call functions by string name
+TODO: needs to be cleaned and documented
+
+Author: Aaron Hardin
+
+*/
+
 #include "CallFunction.h"
 
 void CallFunction::add( const string& funName, void(*funPtr)(vector<string>) )

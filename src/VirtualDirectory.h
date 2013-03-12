@@ -1,3 +1,5 @@
+//see cpp for documentation
+
 #ifndef VIRTUALDIRECTORY_H
 #define VIRTUALDIRECTORY_H
 

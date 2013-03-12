@@ -1,3 +1,12 @@
+/*
+Summary: this function is used to browse directories and implements a callback to handle the file result
+TODO: needs to be cleaned and documented
+		some functions need to be moved from main to help modularity
+
+Author: Aaron Hardin
+
+*/
+
 #include "VirtualDirectory.h"
 #include <dirent.h>
 #include <sys/stat.h>

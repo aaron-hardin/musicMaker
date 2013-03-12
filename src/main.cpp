@@ -1,10 +1,11 @@
 //************************************************************************************************
 // Name:		musicMaker
-// Version:		1.0
+// Version:		0.1.2
 // Description:	This arMasterSlaveFramework application creates instrument objects which can be
 //				turned on and off to make music. An augmentation of the SQUAD selection technique
 //				is implemented in which the user can hold down a button to bring up a non-invasive
-//				SQUAD menu to select an instrument.
+//				SQUAD menu to select an instrument. Features import functionality for OBJ files
+// Author: Aaron Hardin
 //************************************************************************************************
 
 // The precompiled header include MUST appear as the first non-commented line. See 

@@ -1,3 +1,12 @@
+/*
+Summary: this function is used to import files into the environment
+TODO: some functions may need to be moved from main to here for modularity
+		copyTo function needs to be implemented
+
+Author: Aaron Hardin
+
+*/
+
 #include "Import.h"
 
 
