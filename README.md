@@ -20,7 +20,7 @@ the items in that quadrant will redistribute themselves in all the quadrants.
 Note: in order for the music to work the mp3 files need to be copied from the 
 data/music folder into aszgard5/szg/rsc
 
-
+<br />
 
 original readme from demo
 
