@@ -16,6 +16,7 @@ void Import::import(const string &filename,const string &path = "data/obj")
 	if (filename[length-1] == 'j' && filename[length-2] == 'b' && filename[length-3] == 'o')
 	{
 		Object* newObj = new Object(2,1,1,1,filename,path);
+		newObj->normalize();
 		newObj->setMatrix(ar_translationMatrix(0, 4, -8)); // initial position
 		objects.push_back(newObj);
 	}

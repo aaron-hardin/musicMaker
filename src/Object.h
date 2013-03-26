@@ -62,6 +62,8 @@ class Object:public arInteractableThing {
 		// Get object's type.
 		int getType() { return _type; }
 		
+		void normalize() { loadedOBJ.normalizeModelSize(); }
+		
 		// Get object's length, height, or width.
 		float getLength() { return _length; }
 		float getHeight() { return _height; }
