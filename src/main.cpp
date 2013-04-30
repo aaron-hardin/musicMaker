@@ -258,15 +258,13 @@ void preExchange(arMasterSlaveFramework& framework) {
 	// in milliseconds
 	double currentTime = framework.getTime();
 
-	if((!virtualdirectory.findingFile) && rightHand.getOnButton(4) && (currentTime-pressedImport)>1000)
+	if((!virtualdirectory.findingFile) && leftHand.getOnButton(5) && (currentTime-pressedImport)>1000)
 	{
 		pressedImport = currentTime;
-		//Import::import("piano.obj");
 		virtualdirectory.startBrowse("import", &Import::importCallback);
 	}
 	else if(virtualdirectory.findingFile)
 	{
-		// TODO make buttons do things
 		if (leftHand.getOnButton(9) || (leftHand.getButton(9) && (currentTime-dirButtonPress)>150))
 		{
 			virtualdirectory.upPressed();
@@ -277,14 +275,13 @@ void preExchange(arMasterSlaveFramework& framework) {
 			virtualdirectory.downPressed();
 			dirButtonPress = currentTime;
 		}
-		else if (rightHand.getOnButton(4))// && (currentTime-dirButtonPress)>200)
+		else if (leftHand.getOnButton(3))// && (currentTime-dirButtonPress)>200)
 		{
 			pressedImport = currentTime;
 			virtualdirectory.selectFile();
 			dirButtonPress = currentTime;
-			//cout << "wth" << flush;
 		}
-		else if (rightHand.getOnButton(5))
+		else if (leftHand.getOnButton(2))
 		{
 			pressedImport = currentTime;
 			virtualdirectory.findingFile = false;
@@ -473,7 +470,7 @@ void preExchange(arMasterSlaveFramework& framework) {
 		//  else redistribute objects
 	}
 	
-	button1 = leftHand.getButton(1);
+	button1 = leftHand.getButton(4);
 
 	if(button1) //button is down
 	{
@@ -491,22 +488,6 @@ void preExchange(arMasterSlaveFramework& framework) {
 			{
 				selectionMode = 1; // just entered selection mode
 				coneselection = false;
-				
-				// for now lets just find out if our piano is in the cone
-				/*
-				float x[] = {pianoMatrix[12], pianoMatrix[13], pianoMatrix[14]};
-				float height = leftHand.getLength();
-				float radius = height/2.f;
-				arMatrix4 tp = leftHand.getBaseMatrix();
-				arMatrix4 bm = leftHand.getMatrix();
-				float t[] = {tp[12],tp[13],tp[14]};
-				float b[] = {bm[12],bm[13],bm[14]};
-				cout << "is piano in cone?: " << isLyingInCone(x, t, b, radius, height) << '\n';
-				cout << "x " << x[0] << " " << x[1] << " " << x[2] << '\n';
-				cout << "t " << t[0] << " " << t[1] << " " << t[2] << '\n';
-				cout << "b " << b[0] << " " << b[1] << " " << b[2] << '\n';
-				cout << "radius " << radius << '\n';
-				*/
 			}
 			else //just pointed and clicked but didn't hold down
 			{

@@ -60,7 +60,7 @@ class LeftVirtualHand:public arEffector {
 			//		8	"R"
 			//		9	"U"
 			//		10	"H" or Home
-			setDrag(arGrabCondition(AR_EVENT_BUTTON, 3, 0.5), arWandRelativeDrag());
+			setDrag(arGrabCondition(AR_EVENT_BUTTON, 10, 0.5), arWandRelativeDrag());
 		}
 		
 		// Manipulator to make the effector extend until it touches the object or reaches

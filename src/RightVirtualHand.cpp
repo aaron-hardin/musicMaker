@@ -69,7 +69,7 @@ void RightVirtualHand::detectCollisions(arEffector& self, vector<arInteractable*
 		
 		//cout << "object was selected?" << '\n';
 		
-		if(getOnButton(1) == 1)
+		if(getOnButton(4) == 1)
 		{
 			//cout << "object was selected" << '\n';
 			Object* oby = (Object*)closestObject;

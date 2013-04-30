@@ -1,0 +1,27 @@
+LEFT
+"2"
+"1"
+"B" - exit import
+"A" - select file, when in import
+"-" - SQUAD/object selection
+"+" - Grab
+"L" - SQUAD
+"D" - SQUAD/finding file
+"R" - SQUAD
+"U" - SQUAD/finding file
+"H" or Home - Import
+
+
+
+RIGHT
+"2"
+"1"
+"B" - Grab with rotate
+"A" - Grab without rotate
+"-" - Select
+"+"
+"L" - Navigation, strafe
+"D" - Navigation, backward
+"R" - Navigation, strafe
+"U" - Navigation, forward
+"H" or Home
